@@ -130,6 +130,71 @@ export function StoryExperience({
     return () => window.removeEventListener("scroll", updateBarVisibility);
   }, []);
 
+  const supportSummaryCard = (
+    <Card className="space-y-4 border-zinc-200/90 p-5 shadow-[0_16px_34px_rgba(15,23,42,0.08)]">
+      <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
+        Meta actual
+      </p>
+      <div className="grid items-center gap-4 sm:grid-cols-[112px_1fr] lg:grid-cols-1">
+        <ProgressRing value={percent} size={112} stroke={10} />
+        <div>
+          <p className="text-3xl font-black tracking-[-0.02em] text-[#E4007C]">
+            {formatCurrency(story.amountRaised)}
+          </p>
+          <p className="text-base text-zinc-600">
+            de <strong>{formatCurrency(story.goalAmount)}</strong>
+          </p>
+          <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
+            <Users2 className="h-4 w-4" />
+            {peopleHelpedLabel(story.supporterCount)}
+          </div>
+        </div>
+      </div>
+      <Progress value={percent} className="h-2.5" />
+      <div className="grid grid-cols-2 gap-2">
+        {[50, 100, 200, 500].map((option) => (
+          <button
+            key={option}
+            onClick={() => setSelectedAmount(option)}
+            className={`rounded-full border px-3 py-2 text-sm font-medium transition ${
+              selectedAmount === option
+                ? "border-[#E4007C] bg-[#fff0f8] text-[#E4007C]"
+                : "border-zinc-300 bg-white text-zinc-700"
+            }`}
+          >
+            {formatCurrency(option)}
+          </button>
+        ))}
+      </div>
+      {canReceiveSupport ? (
+        <Button size="lg" className="w-full" onClick={() => setShowModal(true)}>
+          Apoyar con CoDi
+        </Button>
+      ) : (
+        <Button size="lg" className="w-full" disabled>
+          No disponible por ahora
+        </Button>
+      )}
+      {showExampleBadge ? (
+        <p className="text-xs text-zinc-500">Historia de ejemplo para demo hackathon.</p>
+      ) : null}
+    </Card>
+  );
+
+  const trustCard = (
+    <Card className="space-y-2 border-zinc-200/90 p-5 text-sm text-zinc-700">
+      <p>
+        <span className="font-semibold">Gestionado por:</span> {story.organizationName}
+      </p>
+      <p>
+        <span className="font-semibold">Cuenta receptora:</span> {story.accountHolderName}
+      </p>
+      <p>
+        <span className="font-semibold">CLABE destino:</span> {story.clabeMasked}
+      </p>
+    </Card>
+  );
+
   return (
     <>
       <section className="mx-auto w-full max-w-7xl px-4 pb-[calc(10rem+env(safe-area-inset-bottom))] pt-6 md:px-8 md:pb-16">
@@ -190,6 +255,11 @@ export function StoryExperience({
                 {story.story}
               </p>
             </Card>
+
+            <div className="space-y-4 lg:hidden">
+              {supportSummaryCard}
+              {trustCard}
+            </div>
 
             <Card className="space-y-4 border-zinc-200/90 p-6">
               <p className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
@@ -256,9 +326,10 @@ export function StoryExperience({
               </Card>
 
               <Card className="space-y-4 border-zinc-200/90 p-5">
-                <h3 className="text-lg font-semibold text-zinc-900">Escanea para apoyar</h3>
+                <h3 className="text-lg font-semibold text-zinc-900">Escanea para abrir la historia</h3>
                 <p className="text-sm text-zinc-600">
-                  Descarga una tarjeta lista para imprimir o compartir.
+                  Descarga una tarjeta lista para imprimir o compartir. El pago se realiza en el
+                  botón <span className="font-medium">Apoyar con CoDi</span>.
                 </p>
                 <QrCardDownload personName={story.personName} slug={story.slug} />
               </Card>
@@ -281,6 +352,15 @@ export function StoryExperience({
                         <p className="font-semibold">{supporter.donorName}</p>
                         <p className="font-semibold text-[#0F7B59]">{formatCurrency(supporter.amount)}</p>
                       </div>
+                      {supporter.isRealConfirmed ? (
+                        <p className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                          Confirmado por CoDi
+                        </p>
+                      ) : (
+                        <p className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
+                          Aporte de ejemplo
+                        </p>
+                      )}
                       {supporter.message ? (
                         <p className="mt-1 leading-relaxed text-zinc-600">{supporter.message}</p>
                       ) : null}
@@ -291,67 +371,9 @@ export function StoryExperience({
             </Card>
           </article>
 
-          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-            <Card className="space-y-4 border-zinc-200/90 p-5 shadow-[0_16px_34px_rgba(15,23,42,0.08)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
-                Meta actual
-              </p>
-              <div className="grid items-center gap-4 sm:grid-cols-[112px_1fr] lg:grid-cols-1">
-                <ProgressRing value={percent} size={112} stroke={10} />
-                <div>
-                  <p className="text-3xl font-black tracking-[-0.02em] text-[#E4007C]">
-                    {formatCurrency(story.amountRaised)}
-                  </p>
-                  <p className="text-base text-zinc-600">
-                    de <strong>{formatCurrency(story.goalAmount)}</strong>
-                  </p>
-                  <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
-                    <Users2 className="h-4 w-4" />
-                    {peopleHelpedLabel(story.supporterCount)}
-                  </div>
-                </div>
-              </div>
-              <Progress value={percent} className="h-2.5" />
-              <div className="grid grid-cols-2 gap-2">
-                {[50, 100, 200, 500].map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => setSelectedAmount(option)}
-                    className={`rounded-full border px-3 py-2 text-sm font-medium transition ${
-                      selectedAmount === option
-                        ? "border-[#E4007C] bg-[#fff0f8] text-[#E4007C]"
-                        : "border-zinc-300 bg-white text-zinc-700"
-                    }`}
-                  >
-                    {formatCurrency(option)}
-                  </button>
-                ))}
-              </div>
-              {canReceiveSupport ? (
-                <Button size="lg" className="w-full" onClick={() => setShowModal(true)}>
-                  Apoyar con CoDi
-                </Button>
-              ) : (
-                <Button size="lg" className="w-full" disabled>
-                  No disponible por ahora
-                </Button>
-              )}
-              {showExampleBadge ? (
-                <p className="text-xs text-zinc-500">Historia de ejemplo para demo hackathon.</p>
-              ) : null}
-            </Card>
-
-            <Card className="space-y-2 border-zinc-200/90 p-5 text-sm text-zinc-700">
-              <p>
-                <span className="font-semibold">Gestionado por:</span> {story.organizationName}
-              </p>
-              <p>
-                <span className="font-semibold">Cuenta receptora:</span> {story.accountHolderName}
-              </p>
-              <p>
-                <span className="font-semibold">CLABE destino:</span> {story.clabeMasked}
-              </p>
-            </Card>
+          <aside className="hidden space-y-4 lg:sticky lg:top-24 lg:block lg:self-start">
+            {supportSummaryCard}
+            {trustCard}
           </aside>
         </div>
       </section>

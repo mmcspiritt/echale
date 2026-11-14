@@ -19,6 +19,23 @@ function roundMoney(value: number) {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
+function isRealConfirmedPayment(payment: {
+  status: string;
+  method: string;
+  providerTransactionId: string | null;
+  peyApiKeyId: string | null;
+}) {
+  if (payment.status !== "paid") return false;
+  if (payment.method === "mock") return false;
+  return Boolean(payment.providerTransactionId || payment.peyApiKeyId);
+}
+
+function firstName(fullName: string) {
+  const trimmed = fullName.trim();
+  if (!trimmed) return "persona";
+  return trimmed.split(/\s+/)[0] ?? trimmed;
+}
+
 export async function GET() {
   const stories = await listPublicStoriesWithStats();
   const totals = stories.reduce(
@@ -34,9 +51,17 @@ export async function GET() {
   const paidPayments = payments
     .filter((payment) => payment.status === "paid" && payment.paidAt)
     .sort((a, b) => (a.paidAt! < b.paidAt! ? 1 : -1));
+  const paidRealConfirmed = paidPayments.filter((payment) =>
+    isRealConfirmedPayment(payment),
+  );
 
   const todayKey = mxDateKey(new Date());
   const amountRaisedToday = paidPayments.reduce((acc, payment) => {
+    const paidAt = payment.paidAt ? new Date(payment.paidAt) : null;
+    if (!paidAt) return acc;
+    return mxDateKey(paidAt) === todayKey ? acc + payment.amount : acc;
+  }, 0);
+  const amountRaisedTodayReal = paidRealConfirmed.reduce((acc, payment) => {
     const paidAt = payment.paidAt ? new Date(payment.paidAt) : null;
     if (!paidAt) return acc;
     return mxDateKey(paidAt) === todayKey ? acc + payment.amount : acc;
@@ -45,11 +70,12 @@ export async function GET() {
   const recent = paidPayments.slice(0, 5).map((payment) => ({
     id: payment.id,
     storySlug: payment.storySlug,
-    storyTitle: payment.storyTitle,
+    beneficiaryFirstName: firstName(payment.storyPersonName),
     amount: payment.amount,
     donorName: payment.donorName ?? "Alguien que prefiere anonimato",
     paidAt: payment.paidAt,
-    isConfirmed: true,
+    isConfirmed: isRealConfirmedPayment(payment),
+    isExample: !isRealConfirmedPayment(payment),
   }));
 
   return NextResponse.json({
@@ -58,6 +84,8 @@ export async function GET() {
       supporters: totals.supporters,
       stories: stories.length,
       amountRaisedToday: roundMoney(amountRaisedToday),
+      amountRaisedTodayReal: roundMoney(amountRaisedTodayReal),
+      amountRaisedPlatformTotal: roundMoney(totals.amountRaised),
     },
     recentPayments: recent.map((item) => ({
       ...item,

@@ -20,17 +20,6 @@ export function DiscoverView({ stories }: { stories: StoryWithStats[] }) {
     return stories.filter((story) => story.category === category);
   }, [category, stories]);
 
-  const filteredTotals = useMemo(() => {
-    return filteredStories.reduce(
-      (acc, story) => {
-        acc.amount += story.amountRaised;
-        acc.people += story.supporterCount;
-        return acc;
-      },
-      { amount: 0, people: 0 },
-    );
-  }, [filteredStories]);
-
   const globalTotals = useMemo(() => {
     return stories.reduce(
       (acc, story) => {
@@ -149,24 +138,8 @@ export function DiscoverView({ stories }: { stories: StoryWithStats[] }) {
         </div>
       </div>
 
-      <div className="mt-6 flex flex-col gap-3 rounded-3xl border border-zinc-100 bg-white p-5 md:flex-row md:items-center md:justify-between">
-        <p className="text-sm text-zinc-500">En esta vista</p>
-        <div className="flex flex-wrap items-center gap-4">
-          <p className="text-sm text-zinc-600">
-            <span className="text-xl font-semibold text-zinc-900">
-              {formatCurrency(filteredTotals.amount)}
-            </span>{" "}
-            recaudados
-          </p>
-          <p className="text-sm text-zinc-600">
-            <span className="text-xl font-semibold text-zinc-900">{filteredTotals.people}</span>{" "}
-            {filteredTotals.people === 1 ? "persona ayudó" : "personas ayudaron"}
-          </p>
-        </div>
-      </div>
-
       {filteredStories.length === 0 ? (
-        <div className="mt-8 rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-10 text-center">
+        <div className="mt-7 rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-10 text-center">
           <h3 className="text-xl font-semibold text-zinc-800">Aún no hay historias aquí</h3>
           <p className="mt-2 text-sm text-zinc-600">
             Prueba otro filtro o crea tu solicitud en{" "}

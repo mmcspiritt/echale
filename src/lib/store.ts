@@ -253,6 +253,12 @@ function toStoryWithStats(story: Story, payments: SupportPayment[]): StoryWithSt
   };
 }
 
+function isRealPeyConfirmation(payment: SupportPayment) {
+  if (payment.status !== "paid") return false;
+  if (payment.method === "mock") return false;
+  return Boolean(payment.providerTransactionId || payment.peyApiKeyId);
+}
+
 function mapStoryRow(row: Record<string, unknown>): Story {
   return normalizeStory({
     id: String(row.id),
@@ -423,7 +429,7 @@ export async function listSupportersForStory(
   if (sql) {
     await ensurePostgresSchema();
     const rows = await sql`
-      SELECT id, donor_name, message, amount, paid_at
+      SELECT id, donor_name, message, amount, paid_at, method, provider_transaction_id, pey_api_key_id
       FROM payments
       WHERE story_id = ${storyId} AND status = 'paid' AND paid_at IS NOT NULL
       ORDER BY paid_at DESC
@@ -435,6 +441,12 @@ export async function listSupportersForStory(
       message: row.message ? String(row.message) : null,
       amount: Number(row.amount),
       paidAt: new Date(String(row.paid_at)).toISOString(),
+      isRealConfirmed:
+        String(row.method) !== "mock" &&
+        Boolean(row.provider_transaction_id || row.pey_api_key_id),
+      isExample:
+        String(row.method) === "mock" ||
+        (!row.provider_transaction_id && !row.pey_api_key_id),
     }));
   }
 
@@ -449,6 +461,8 @@ export async function listSupportersForStory(
       message: payment.message,
       amount: payment.amount,
       paidAt: payment.paidAt as string,
+      isRealConfirmed: isRealPeyConfirmation(payment),
+      isExample: !isRealPeyConfirmation(payment),
     }));
 }
 
@@ -456,7 +470,7 @@ export async function listPaymentsWithStory() {
   if (sql) {
     await ensurePostgresSchema();
     const rows = await sql`
-      SELECT p.*, s.slug AS story_slug, s.title AS story_title
+      SELECT p.*, s.slug AS story_slug, s.title AS story_title, s.person_name AS story_person_name
       FROM payments p
       JOIN stories s ON p.story_id = s.id
       ORDER BY p.created_at DESC
@@ -465,6 +479,7 @@ export async function listPaymentsWithStory() {
       ...mapPaymentRow(row),
       storySlug: String(row.story_slug),
       storyTitle: String(row.story_title),
+      storyPersonName: String(row.story_person_name),
     }));
   }
 
@@ -478,6 +493,7 @@ export async function listPaymentsWithStory() {
         ...payment,
         storySlug: story?.slug ?? "sin-slug",
         storyTitle: story?.title ?? "Historia eliminada",
+        storyPersonName: story?.personName ?? "Persona",
       };
     });
 }

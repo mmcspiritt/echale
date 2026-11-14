@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CircleDot } from "lucide-react";
 import useSWR from "swr";
 
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, supportVerbForDisplayName } from "@/lib/utils";
 
 interface StatsResponse {
   totals: {
@@ -16,11 +16,12 @@ interface StatsResponse {
   recentPayments: Array<{
     id: string;
     storySlug: string;
-    storyTitle: string;
+    beneficiaryFirstName: string;
     amount: number;
     donorName: string;
     paidAt: string;
     isConfirmed: boolean;
+    isExample: boolean;
   }>;
 }
 
@@ -126,18 +127,28 @@ export function LiveStatsStrip({
           feedItems.map((item) => (
             <article
               key={item.id}
-              className="flex items-center justify-between gap-3 rounded-2xl border border-zinc-100 px-4 py-3 text-sm"
+              className="rounded-2xl border border-zinc-100 px-4 py-3 text-sm"
             >
-              <p className="text-zinc-700">
-                <span className="font-semibold">{item.donorName}</span> apoyó a{" "}
-                <span className="font-semibold">{item.storyTitle}</span> con{" "}
-                <span className="font-semibold text-zinc-900">{formatCurrency(item.amount)}</span>{" "}
-                · {formatRelative(item.paidAt)}
-              </p>
-              <p className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium text-emerald-700">
-                <CircleDot className="h-3.5 w-3.5 animate-pulse" />
-                Confirmado por CoDi vía Pey
-              </p>
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4">
+                <p className="min-w-0 break-words text-zinc-700 md:flex-1">
+                  <span className="font-semibold">{item.donorName}</span>{" "}
+                  {supportVerbForDisplayName(item.donorName)} la historia de{" "}
+                  <span className="font-semibold">{item.beneficiaryFirstName}</span> con{" "}
+                  <span className="font-semibold text-zinc-900">{formatCurrency(item.amount)}</span>{" "}
+                  <span className="whitespace-nowrap">· {formatRelative(item.paidAt)}</span>
+                </p>
+                {item.isConfirmed ? (
+                  <p className="inline-flex w-fit items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                    <CircleDot className="h-3.5 w-3.5 animate-pulse" />
+                    Confirmado por CoDi
+                  </p>
+                ) : (
+                  <p className="inline-flex w-fit items-center gap-1.5 whitespace-nowrap rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600">
+                    <CircleDot className="h-3.5 w-3.5" />
+                    Aporte de ejemplo
+                  </p>
+                )}
+              </div>
             </article>
           ))
         )}

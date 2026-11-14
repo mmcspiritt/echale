@@ -47,6 +47,11 @@ export function peopleHelpedLabel(count: number) {
   return count === 1 ? "1 persona ha ayudado" : `${count} personas han ayudado`;
 }
 
+export function supportVerbForDisplayName(displayName: string) {
+  const normalized = displayName.toLowerCase();
+  return normalized.includes(" y ") || normalized.includes("&") ? "apoyaron" : "apoyó";
+}
+
 export function maskClabe(clabe: string) {
   const clean = clabe.replace(/\D/g, "");
   if (clean.length !== 18) return clabe;

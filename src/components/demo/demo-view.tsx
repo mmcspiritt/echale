@@ -6,7 +6,7 @@ import confetti from "canvas-confetti";
 import { CircleDot } from "lucide-react";
 import useSWR from "swr";
 
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, supportVerbForDisplayName } from "@/lib/utils";
 
 interface StatsResponse {
   totals: {
@@ -14,15 +14,18 @@ interface StatsResponse {
     supporters: number;
     stories: number;
     amountRaisedToday: number;
+    amountRaisedTodayReal?: number;
+    amountRaisedPlatformTotal?: number;
   };
   recentPayments: Array<{
     id: string;
     storySlug: string;
-    storyTitle: string;
+    beneficiaryFirstName: string;
     amount: number;
     donorName: string;
     paidAt: string;
     isConfirmed: boolean;
+    isExample: boolean;
   }>;
 }
 
@@ -120,9 +123,15 @@ export function DemoView({ baseUrl }: { baseUrl: string }) {
           </p>
 
           <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5">
-            <p className="text-sm text-zinc-600">Recaudado hoy</p>
+            <p className="text-sm text-zinc-600">Recaudado hoy (solo CoDi confirmado)</p>
             <p className="text-5xl font-black tracking-[-0.03em] text-[#E4007C]">
-              {formatCurrency(data?.totals.amountRaisedToday ?? 0)}
+              {formatCurrency(data?.totals.amountRaisedTodayReal ?? 0)}
+            </p>
+            <p className="mt-2 text-sm text-zinc-600">
+              Total en la plataforma (incluye ejemplos):{" "}
+              <span className="font-semibold text-zinc-900">
+                {formatCurrency(data?.totals.amountRaisedPlatformTotal ?? 0)}
+              </span>
             </p>
           </div>
 
@@ -194,17 +203,27 @@ export function DemoView({ baseUrl }: { baseUrl: string }) {
             recent.map((item) => (
               <article
                 key={item.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-white px-4 py-3 text-sm"
+                className="rounded-2xl bg-white px-4 py-3 text-sm"
               >
-                <p className="text-zinc-700">
-                  {item.donorName} apoyó a {item.storyTitle} con{" "}
-                  <span className="font-semibold text-zinc-900">{formatCurrency(item.amount)}</span> ·{" "}
-                  {formatRelative(item.paidAt)}
-                </p>
-                <p className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
-                  <CircleDot className="h-3.5 w-3.5 animate-pulse" />
-                  Confirmado por CoDi
-                </p>
+                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4">
+                  <p className="min-w-0 break-words text-zinc-700 md:flex-1">
+                    {item.donorName} {supportVerbForDisplayName(item.donorName)} la historia de{" "}
+                    <span className="font-semibold">{item.beneficiaryFirstName}</span> con{" "}
+                    <span className="font-semibold text-zinc-900">{formatCurrency(item.amount)}</span>{" "}
+                    <span className="whitespace-nowrap">· {formatRelative(item.paidAt)}</span>
+                  </p>
+                  {item.isConfirmed ? (
+                    <p className="inline-flex w-fit items-center gap-1 whitespace-nowrap rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                      <CircleDot className="h-3.5 w-3.5 animate-pulse" />
+                      Confirmado por CoDi
+                    </p>
+                  ) : (
+                    <p className="inline-flex w-fit items-center gap-1 whitespace-nowrap rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600">
+                      <CircleDot className="h-3.5 w-3.5" />
+                      Aporte de ejemplo
+                    </p>
+                  )}
+                </div>
               </article>
             ))
           )}

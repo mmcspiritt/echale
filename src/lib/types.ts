@@ -81,6 +81,8 @@ export interface SupporterItem {
   message: string | null;
   amount: number;
   paidAt: string;
+  isRealConfirmed: boolean;
+  isExample: boolean;
 }
 
 export interface StoryLiveData {
