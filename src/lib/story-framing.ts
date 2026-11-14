@@ -1,11 +1,12 @@
 export const storyFraming = {
   adrian: {
     coverFocus: "50% 32%",
-    posterLine: "Ayúdale a volver a Guanajuato",
+    posterLine: "Échale la mano a Adrián para volver a Guanajuato",
     blurDataURL: "data:image/webp;base64,UklGRoIAAABXRUJQVlA4IHYAAACwAwCdASoQABQAPu1iqU2ppaOiMAgBMB2JZwC7ACD0BmMMrHliAAD+g+7Hpu2vj9JZVJeevDo1KcLCuw10CEIWvu0lOmPWvV6lh64nGddVbtGKwmsHXU6uXRLZYWaIwxI9Mf9ezHTx9jXXrQ9yxptTt9ZjESgA",
   },
   santiago: {
     coverFocus: "28% 62%",
+    mobileCoverFocus: "50% 15%",
     posterFocus: "28% 36%",
     posterLine: "Ayúdale a recuperar la rodilla",
     blurDataURL: "data:image/webp;base64,UklGRooAAABXRUJQVlA4IH4AAABQBACdASoQABQAPu1iqU2ppaOiMAgBMB2JZQC1GoACfFZfMg/lw5klDYPAAPhClb7dmf8Ba2RkWrLC+ZnbeWRtBlTpDF1fI/s7h1Ntvd0tTEmzhYm5ddOXfLxEAOMsZmul4UJBDTFnJXtyzeHriihT1gpChX9dK1LFkRChQAA=",

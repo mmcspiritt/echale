@@ -3,13 +3,15 @@ import { notFound } from "next/navigation";
 
 import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
+import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { getPublicBaseUrl } from "@/lib/site-url";
 import { StoryExperience } from "@/components/story/story-experience";
+import { toPublicStory } from "@/lib/public-story";
 import { getStoryBySlugWithStats, listSupportersForStory, seedDemoStories } from "@/lib/store";
 
 interface StoryPageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ preview?: string }>;
+  searchParams: Promise<{ preview?: string; simular?: string; vista?: string }>;
 }
 
 export async function generateMetadata({ params }: StoryPageProps): Promise<Metadata> {
@@ -59,14 +61,19 @@ export default async function StoryPage({ params, searchParams }: StoryPageProps
   }
 
   const supporters = await listSupportersForStory(story.id);
+  const canSimulate =
+    process.env.NODE_ENV !== "production" ||
+    (query.simular === "1" && (await isAdminAuthenticated()));
 
   return (
     <div className="min-h-screen bg-paper pb-[calc(72px+env(safe-area-inset-bottom))] lg:pb-0">
       <SiteHeader />
       <StoryExperience
-        initialData={{ story, supporters }}
+        initialData={{ story: toPublicStory(story), supporters }}
         previewToken={previewToken}
         publicBaseUrl={getPublicBaseUrl()}
+        canSimulate={canSimulate}
+        goalPreview={query.vista === "cumplida"}
       />
       <SiteFooter />
     </div>

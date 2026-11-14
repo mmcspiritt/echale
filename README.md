@@ -44,6 +44,22 @@ The project is framed around **goals managed by a verified partner organization*
   - `aprobada + PENDING/PROCESSING`: public but donation disabled with explanation
   - `aprobada + ACTIVE`: payable
 
+## Content migration
+
+`scripts/round3-content.sql` updates story copy, organization names, galleries and example donations without changing each story's total or any real CoDi payment. Apply it with `DATABASE_URL` set:
+
+```bash
+node scripts/apply-round3-content.mjs
+```
+
+`node scripts/apply-round3-content.mjs --mock` updates only `data/mock-db.json`.
+
+`scripts/round4-adrian-shelter.sql` replaces the leftover “Casa de Paso Esperanza” in Adrián’s story body with “Albergue Camino a Casa”. It is safe to run more than once. Apply it with `DATABASE_URL` set:
+
+```bash
+node scripts/apply-round4-adrian-shelter.mjs
+```
+
 ## Local setup
 
 1. Install:
@@ -167,3 +183,11 @@ See `.env.example` for full list.
 ## Submission text
 
 Spanish submission-ready copy is in `SUBMISSION_ES.md`.
+
+## Qué hay en el demo
+
+- Llegada en vivo en `/demo`: el total **Recibido con CoDi en vivo** y la traza del webhook firmado (`POST /codi/qr` → pago en el banco → webhook → meta).
+- Comprobantes en `/apoyo/<id>` para cada pago CoDi confirmado.
+- Página de la organización en `/org/<slug>` y una **Bitácora** en cada campaña.
+- Alcancía de mostrador en `/<slug>/alcancia`.
+- Walkthrough ilustrado **Así se ve en tu banco** en `/demo`, etiquetado como recreación ilustrativa (no es un pago real).

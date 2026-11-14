@@ -1,18 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useMemo, useState } from "react";
 
 import { LiveStatsStrip } from "@/components/home/live-stats-strip";
 import { StoryCard } from "@/components/home/story-card";
-import { ArtDirectedImage } from "@/components/media/art-directed-image";
-import { HowItWorksSection } from "@/components/site/how-it-works-section";
 import { categories } from "@/lib/categories";
 import { homeHeroBlur } from "@/lib/story-framing";
 import { StoryCategory, StoryWithStats } from "@/lib/types";
 import { formatCurrency, peopleHelpedLabel } from "@/lib/utils";
 
-export function DiscoverView({ stories }: { stories: StoryWithStats[] }) {
+export function DiscoverView({ stories, realTotal }: { stories: StoryWithStats[]; realTotal: number }) {
   const [category, setCategory] = useState<StoryCategory | "all">("all");
 
   const availableCategories = useMemo(
@@ -40,12 +39,11 @@ export function DiscoverView({ stories }: { stories: StoryWithStats[] }) {
     <section className="mx-auto w-full max-w-7xl px-4 pb-16 md:px-8">
       <section className="mt-4 grid items-center gap-6 lg:mt-8 lg:grid-cols-12 lg:gap-10">
         <div className="order-2 space-y-4 lg:order-1 lg:col-span-6">
-          <h1 className="text-pretty text-display text-ink lg:max-w-[13ch]">
-            Cuando alguien necesita una mano, se&nbsp;la&nbsp;echamos.
+          <h1 className="text-balance text-display text-ink">
+            Cuando alguien necesita una mano, se la echamos.
           </h1>
           <p className="max-w-[65ch] text-body text-ink-2">
-            Historias reales, revisadas por organizaciones aliadas. Apoyas con CoDi desde tu banco
-            y el dinero llega directo a la persona.
+            Cada historia la revisa y gestiona una organización aliada. Apoyas con CoDi desde la app de tu banco y el dinero llega directo a la cuenta de la persona.
           </p>
           <div className="flex flex-wrap items-center gap-4">
             <Link
@@ -58,35 +56,36 @@ export function DiscoverView({ stories }: { stories: StoryWithStats[] }) {
               href="/crear"
               className="inline-flex min-h-11 items-center text-small font-semibold text-ink hover:text-rosa"
             >
-              Crear una página →
+              Crea una página
             </Link>
           </div>
-          <p className="text-small leading-relaxed text-ink-2">
-            <span className="font-semibold tabular-nums text-ink">
-              {formatCurrency(globalTotals.amount)}
-            </span>{" "}
-            reunidos ·{" "}
-            <span className="font-semibold tabular-nums text-ink">{peopleHelpedLabel(globalTotals.people)}</span>{" "}
-            ·{" "}
-            <span className="font-semibold tabular-nums text-ink">{stories.length}</span>{" "}
-            {stories.length === 1 ? "historia" : "historias"}
+          <p className="text-small font-semibold tabular-nums text-ink">
+            <span className="whitespace-nowrap">{formatCurrency(realTotal)} confirmado con CoDi en vivo</span>
           </p>
-          <p className="text-micro text-ink-2/80">Incluye aportes de ejemplo.</p>
+          <p className="flex flex-wrap gap-x-4 gap-y-1 text-small text-ink-2">
+            <span className="whitespace-nowrap tabular-nums">{formatCurrency(globalTotals.amount)} reunidos</span>
+            <span className="whitespace-nowrap tabular-nums">{peopleHelpedLabel(globalTotals.people)}</span>
+            <span className="whitespace-nowrap tabular-nums">
+              {stories.length} {stories.length === 1 ? "historia" : "historias"}
+            </span>
+          </p>
+          <p className="text-micro text-ink-2">
+            Pagos CoDi procesados por Pey · confirmación automática por webhook firmado
+          </p>
         </div>
 
         <div className="order-1 lg:order-2 lg:col-span-6">
-          <div className="relative aspect-[4/5] max-h-[28svh] overflow-hidden rounded-xl bg-[#efe8dc] sm:max-h-none sm:aspect-[3/2]">
-            <ArtDirectedImage
-              mobileSrc="/images/home-hero-4x5.webp"
-              desktopSrc="/images/home-hero-3x2.webp"
+          <div className="relative -mx-4 aspect-[4/3] w-[calc(100%+2rem)] overflow-hidden rounded-none bg-[#efe8dc] sm:mx-0 sm:aspect-[3/2] sm:w-full sm:rounded-xl">
+            <Image
+              src="/images/home-hero-3x2.webp"
               alt="En la tiendita del barrio, una vecina muestra su celular en el mostrador"
+              width={2400}
+              height={1600}
               priority
-              mobileSizes="100vw"
-              desktopSizes="50vw"
-              mobileObjectPosition="center 42%"
-              desktopObjectPosition="center 46%"
-              mobileBlurDataURL={homeHeroBlur.portrait}
-              desktopBlurDataURL={homeHeroBlur.wide}
+              sizes="(max-width: 640px) 100vw, 50vw"
+              placeholder="blur"
+              blurDataURL={homeHeroBlur.wide}
+              className="absolute left-0 top-1/2 !h-[128%] !w-auto !max-w-none -translate-y-1/2 sm:!h-[146%]"
             />
           </div>
         </div>
@@ -143,9 +142,12 @@ export function DiscoverView({ stories }: { stories: StoryWithStats[] }) {
         initialSupporters={globalTotals.people}
       />
 
-      <div className="mt-10">
-        <HowItWorksSection compact />
-      </div>
+      <p className="mt-8 text-small text-ink-2">
+        ¿Cómo llega el dinero? Directo a la cuenta de la persona, por CoDi.{" "}
+        <Link href="/como-funciona" className="font-semibold text-ink hover:text-rosa">
+          Ver cómo funciona →
+        </Link>
+      </p>
     </section>
   );
 }

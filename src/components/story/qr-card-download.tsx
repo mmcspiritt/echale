@@ -78,7 +78,7 @@ export function QrCardDownload({
 
     ctx.fillStyle = "#4A453F";
     ctx.font = "500 24px Instrument Sans, Arial, sans-serif";
-    const caption = "Escanea para ver la historia";
+    const caption = "Escanea con tu cel para ver su historia";
     const captionWidth = ctx.measureText(caption).width;
     ctx.fillText(caption, 636 + (380 - captionWidth) / 2, 1290);
 
@@ -142,14 +142,23 @@ export function QrCardDownload({
   return (
     <div className="flex flex-wrap gap-2">
       {mode === "text-link" ? (
-        <button
-          type="button"
-          onClick={downloadPng}
-          disabled={busy}
-          className="inline-flex min-h-11 items-center text-small font-semibold text-ink underline underline-offset-4 hover:text-rosa disabled:opacity-50"
-        >
-          Descargar cartel con QR
-        </button>
+        <div className="flex items-center gap-3">
+          {coverImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={coverImage}
+              alt=""
+              className="h-[120px] w-[120px] rounded-md object-cover"
+              style={{ objectPosition: focus }}
+            />
+          ) : null}
+          <div className="space-y-1">
+            <Button type="button" variant="outline" onClick={downloadPng} disabled={busy}>
+              Descargar cartel
+            </Button>
+            <p className="text-small text-ink-2">Imprímelo para la tienda o el camión</p>
+          </div>
+        </div>
       ) : (
         <>
           <Button variant="outline" size="sm" onClick={downloadPng} disabled={busy}>

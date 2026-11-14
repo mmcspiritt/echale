@@ -235,7 +235,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 <Input
                   name="clabe"
                   defaultValue={initialStory.clabe ?? ""}
-                  placeholder="012180001234567899"
+                  placeholder="012 180 0000 0000 0000"
                 />
               </div>
               <div className="space-y-1">

@@ -121,7 +121,7 @@ export function CreateStoryForm() {
 
   if (success) {
     return (
-      <section className="rounded-xl border border-line bg-white p-6 shadow-card md:p-8">
+      <section className="py-2">
         <div className="mx-auto max-w-2xl space-y-4 text-center">
           <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-100">
             <CheckCircle2 className="h-9 w-9 text-emerald-600" />
@@ -156,7 +156,7 @@ export function CreateStoryForm() {
   }
 
   return (
-    <section className="rounded-xl border border-line bg-white p-5 shadow-card md:p-8">
+    <section>
       <div className="mb-6 grid grid-cols-4 gap-1.5">
         {[1, 2, 3, 4].map((index) => (
           <div
@@ -168,8 +168,7 @@ export function CreateStoryForm() {
 
       {step === 1 ? (
         <div className="space-y-4">
-          <p className="text-small text-ink-2">Paso 1 de 4</p>
-          <h2 className="text-h3 text-ink">¿Quién necesita apoyo?</h2>
+          <h2 className="text-h3 text-ink">1 de 4 · ¿Quién necesita apoyo?</h2>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
               <label className="text-sm text-zinc-600">Nombre de la persona</label>
@@ -201,8 +200,7 @@ export function CreateStoryForm() {
 
       {step === 2 ? (
         <div className="space-y-4">
-          <p className="text-small text-ink-2">Paso 2 de 4</p>
-          <h2 className="text-h3 text-ink">Cuenta tu historia</h2>
+          <h2 className="text-h3 text-ink">2 de 4 · Cuenta tu historia</h2>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
               <label className="text-sm text-zinc-600">Ciudad</label>
@@ -249,8 +247,7 @@ export function CreateStoryForm() {
 
       {step === 3 ? (
         <div className="space-y-4">
-          <p className="text-small text-ink-2">Paso 3 de 4</p>
-          <h2 className="text-h3 text-ink">Foto y metas</h2>
+          <h2 className="text-h3 text-ink">3 de 4 · Foto y metas</h2>
           <div className="space-y-2">
             <p className="text-small text-ink-2">Elige una foto de ejemplo o pega una ruta del sitio o una URL</p>
             <Input
@@ -314,8 +311,7 @@ export function CreateStoryForm() {
 
       {step === 4 ? (
         <div className="space-y-4">
-          <p className="text-small text-ink-2">Paso 4 de 4</p>
-          <h2 className="text-h3 text-ink">Tu cuenta bancaria</h2>
+          <h2 className="text-h3 text-ink">4 de 4 · Tu cuenta bancaria</h2>
           <p className="text-body text-ink-2">
             Registraremos esta cuenta para CoDi. Banxico puede tardar hasta 5 días hábiles en
             activarla.
@@ -327,7 +323,7 @@ export function CreateStoryForm() {
               maxLength={18}
               value={clabe}
               onChange={(event) => setClabe(event.target.value.replace(/[^\d]/g, "").slice(0, 18))}
-              placeholder="012180001234567899"
+              placeholder="012 180 0000 0000 0000"
             />
           </div>
           <div className="grid gap-3 md:grid-cols-2">

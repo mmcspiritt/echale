@@ -75,7 +75,7 @@ try {
       { label: "Cierre de obra", targetAmount: 18000 },
     ],
     photoUrl: "/images/lupita-oaxaca.jpg",
-    clabe: "012180001234567899",
+    clabe: "000000000000000001",
     entity: "PERSON",
     taxId: null,
   };

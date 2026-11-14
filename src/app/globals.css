@@ -66,6 +66,21 @@ select:focus-visible,
   text-wrap: balance;
 }
 
+@keyframes arrive-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.arrive-in {
+  animation: arrive-in 480ms ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

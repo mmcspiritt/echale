@@ -13,7 +13,7 @@ export const contentType = "image/png";
 
 export default async function HomeOpenGraphImage() {
   const fonts = await loadOgFonts();
-  const imageSrc = await loadOgJpeg("/images/home-hero-3x2.webp");
+  const imageSrc = await loadOgJpeg("/images/home-hero-3x2.webp", { leftRatio: 0.08, widthRatio: 0.62 });
 
   return new ImageResponse(
     (
@@ -32,7 +32,7 @@ export default async function HomeOpenGraphImage() {
             <img
               src={imageSrc}
               alt=""
-              style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 46%" }}
+              style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
             />
           </div>
         ) : null}

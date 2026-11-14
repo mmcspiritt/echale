@@ -75,18 +75,27 @@ export interface StoryWithStats extends Story {
   supporterCount: number;
 }
 
+export type PublicStory = Omit<
+  StoryWithStats,
+  "peyKeyEnv" | "peyEntity" | "peyTaxId" | "bankAccountId" | "clabe" | "contactEmail" | "previewToken"
+> & {
+  showExampleBadge: boolean;
+  clabeRegistered: boolean;
+};
+
 export interface SupporterItem {
   id: string;
   donorName: string;
   message: string | null;
   amount: number;
   paidAt: string;
+  createdAt: string | null;
   isRealConfirmed: boolean;
   isExample: boolean;
 }
 
 export interface StoryLiveData {
-  story: StoryWithStats;
+  story: PublicStory;
   supporters: SupporterItem[];
 }
 

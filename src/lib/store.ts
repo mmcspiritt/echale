@@ -353,7 +353,7 @@ export async function listStoriesWithStats(): Promise<StoryWithStats[]> {
     if (storyIds.length === 0) return [];
 
     const paymentRows = await sql`
-      SELECT * FROM payments WHERE story_id = ANY(${storyIds}) AND status = 'paid'
+      SELECT * FROM payments WHERE story_id IN ${sql(storyIds)} AND status = 'paid'
     `;
     const payments = paymentRows.map((row) => mapPaymentRow(row));
     return stories.map((story) => toStoryWithStats(story, payments));
@@ -429,7 +429,7 @@ export async function listSupportersForStory(
   if (sql) {
     await ensurePostgresSchema();
     const rows = await sql`
-      SELECT id, donor_name, message, amount, paid_at, method, provider_transaction_id, pey_api_key_id
+      SELECT id, donor_name, message, amount, paid_at, created_at, method, provider_transaction_id, pey_api_key_id
       FROM payments
       WHERE story_id = ${storyId} AND status = 'paid' AND paid_at IS NOT NULL
       ORDER BY paid_at DESC
@@ -441,6 +441,7 @@ export async function listSupportersForStory(
       message: row.message ? String(row.message) : null,
       amount: Number(row.amount),
       paidAt: new Date(String(row.paid_at)).toISOString(),
+      createdAt: row.created_at ? new Date(String(row.created_at)).toISOString() : null,
       isRealConfirmed:
         String(row.method) !== "mock" &&
         Boolean(row.provider_transaction_id || row.pey_api_key_id),
@@ -461,6 +462,7 @@ export async function listSupportersForStory(
       message: payment.message,
       amount: payment.amount,
       paidAt: payment.paidAt as string,
+      createdAt: payment.createdAt,
       isRealConfirmed: isRealPeyConfirmation(payment),
       isExample: !isRealPeyConfirmation(payment),
     }));
@@ -496,6 +498,46 @@ export async function listPaymentsWithStory() {
         storyPersonName: story?.personName ?? "Persona",
       };
     });
+}
+
+export interface PublicReceipt {
+  id: string;
+  amount: number;
+  donorName: string;
+  paidAt: string | null;
+  createdAt: string;
+  folioPey: string | null;
+  folioCodi: string | null;
+  personName: string;
+  organizationName: string;
+  clabeMasked: string;
+  slug: string;
+  beforeAmount: number;
+  afterAmount: number;
+}
+
+export async function getPublicReceipt(id: string): Promise<PublicReceipt | null> {
+  const payment = await getPaymentById(id);
+  if (!payment || !isRealPeyConfirmation(payment)) return null;
+  const story = await getStoryById(payment.storyId);
+  if (!story || story.status !== "aprobada") return null;
+  const withStats = await getStoryBySlugWithStats(story.slug);
+  const afterAmount = withStats?.amountRaised ?? payment.amount;
+  return {
+    id: payment.id,
+    amount: payment.amount,
+    donorName: payment.donorName ?? "Alguien que prefiere anonimato",
+    paidAt: payment.paidAt,
+    createdAt: payment.createdAt,
+    folioPey: payment.providerTransactionId,
+    folioCodi: payment.providerChargeId,
+    personName: story.personName,
+    organizationName: story.organizationName,
+    clabeMasked: story.clabeMasked,
+    slug: story.slug,
+    beforeAmount: Math.max(0, afterAmount - payment.amount),
+    afterAmount,
+  };
 }
 
 export async function getPaymentById(id: string): Promise<SupportPayment | null> {

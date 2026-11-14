@@ -6,6 +6,9 @@ import { usePathname } from "next/navigation";
 export function SiteHeader() {
   const pathname = usePathname();
   const showCreateLink = pathname !== "/crear";
+  const known = new Set(["", "crear", "como-funciona", "acceso", "demo", "admin", "org", "apoyo", "alcancia"]);
+  const segment = pathname.split("/").filter(Boolean);
+  const onStory = segment.length === 1 && !known.has(segment[0]);
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-paper">
@@ -15,7 +18,7 @@ export function SiteHeader() {
           aria-label="Échale, inicio"
           className="inline-flex min-h-11 items-center font-display text-[28px] font-bold tracking-[-0.02em] text-ink md:text-[32px]"
         >
-          <span className="text-rosa">É</span>chale
+          <span className="text-rosa" style={{ fontVariationSettings: '"SOFT" 50, "WONK" 1' }}>É</span>chale
         </Link>
 
         <nav className="hidden items-center gap-6 text-[15px] font-medium text-ink md:flex">
@@ -27,17 +30,24 @@ export function SiteHeader() {
           </Link>
           {showCreateLink ? (
             <Link href="/crear" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
-              Crear página
+              Crea una página
             </Link>
           ) : null}
         </nav>
 
-        {showCreateLink ? (
+        {onStory ? (
+          <Link
+            href="/#historias"
+            className="inline-flex min-h-11 items-center text-[15px] font-medium text-ink underline-offset-4 hover:underline md:hidden"
+          >
+            Historias
+          </Link>
+        ) : showCreateLink ? (
           <Link
             href="/crear"
             className="inline-flex min-h-11 items-center text-[15px] font-medium text-ink underline-offset-4 hover:underline md:hidden"
           >
-            Crear página
+            Crea una página
           </Link>
         ) : (
           <span className="md:hidden" />

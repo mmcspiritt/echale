@@ -1,10 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo } from "react";
-import { CircleDot } from "lucide-react";
 import useSWR from "swr";
 
-import { formatCurrency, supportVerbForDisplayName } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 
 interface StatsResponse {
   totals: {
@@ -82,24 +82,18 @@ export function LiveStatsStrip({
       ) : (
         <ul className="mt-4 divide-y divide-line border-y border-line">
           {feedItems.map((item) => {
-            const verb = supportVerbForDisplayName(item.donorName);
-            const keepLong =
-              item.donorName.toLowerCase().includes("prueba en vivo");
             return (
               <li key={item.id} className="flex items-start justify-between gap-3 py-3.5">
                 <p className="min-w-0 text-small leading-relaxed text-ink-2">
-                  <span className="font-semibold text-ink">{item.donorName}</span> {verb}{" "}
-                  {keepLong ? "la historia de " : "a "}
-                  <span className="font-semibold text-ink">{item.beneficiaryFirstName}</span>
-                  {" · "}
+                  <span className="font-semibold text-ink">{item.donorName}</span> le echó la mano a{" "}
+                  <span className="font-semibold text-ink">{item.beneficiaryFirstName}</span> con{" "}
                   <span className="font-semibold tabular-nums text-ink">
                     {formatCurrency(item.amount)}
                   </span>
                   {item.isConfirmed ? (
-                    <span className="mt-1 flex items-center gap-1 text-micro font-semibold uppercase tracking-[0.08em] text-jade">
-                      <CircleDot className="h-3.5 w-3.5" />
-                      Confirmado por CoDi
-                    </span>
+                    <Link href={`/apoyo/${item.id}`} className="mt-1 block text-small font-semibold tracking-normal text-jade">
+                      ✓ Confirmado por CoDi
+                    </Link>
                   ) : null}
                 </p>
                 <span className="shrink-0 whitespace-nowrap text-small text-ink-2">
@@ -111,7 +105,7 @@ export function LiveStatsStrip({
         </ul>
       )}
       {hasExamples ? (
-        <p className="mt-3 text-micro text-ink-2/80">Los aportes sin sello son ejemplos del demo.</p>
+        <p className="mt-3 text-micro text-ink-2">Los aportes sin la marca verde de CoDi son de ejemplo.</p>
       ) : null}
     </section>
   );

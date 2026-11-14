@@ -4,7 +4,7 @@ const steps = [
   {
     step: "1",
     title: "La organización aliada revisa la historia",
-    copy: "Revisa la identidad, la situación y la meta antes de publicar. Solo salen casos con acompañamiento.",
+    copy: "Solo se publica si la organización conoce a la persona en persona.",
   },
   {
     step: "2",
@@ -19,7 +19,7 @@ const steps = [
   {
     step: "4",
     title: "La meta se actualiza al momento",
-    copy: "En cuanto tu banco confirma el pago, la meta sube y tu nombre aparece en la historia.",
+    copy: "Pey nos avisa por webhook firmado en cuanto tu banco confirma. No hay que recargar.",
   },
 ];
 
@@ -37,7 +37,7 @@ const faqs = [
   {
     question: "¿Por qué hay una organización aliada?",
     answer:
-      "Para verificar historias, acompañar a beneficiarios y mantener trazabilidad del apoyo.",
+      "Para checar que cada historia sea cierta, acompañar a la persona y que se sepa en qué se fue cada peso.",
   },
   {
     question: "¿Cuánto cobran?",
@@ -66,7 +66,7 @@ export function HowItWorksSection({ compact = false }: { compact?: boolean }) {
       <div className="grid gap-4 md:grid-cols-2">
         {steps.map((item) => (
           <article key={item.step} className="grid grid-cols-[36px_1fr] gap-3 border-b border-line/70 pb-4 last:border-b-0">
-            <p className="font-display text-3xl text-terracota">{item.step}</p>
+            <p className="font-display text-3xl text-ink-2">{item.step}</p>
             <div>
               <h3 className="text-h3 text-ink">{item.title}</h3>
               <p className="mt-1 text-small text-ink-2">{item.copy}</p>

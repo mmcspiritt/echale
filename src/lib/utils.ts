@@ -22,16 +22,11 @@ export function formatCurrency(
 ) {
   const rounded = Math.round((amount + Number.EPSILON) * 100) / 100;
   const hasFraction = Math.abs(rounded % 1) > 0.000001;
-  const showCents =
-    typeof options?.cents === "boolean"
-      ? options.cents
-      : options?.exact
-        ? hasFraction
-        : hasFraction && Math.abs(rounded) < 100;
+  const showCents = typeof options?.cents === "boolean" ? options.cents : hasFraction;
   return new Intl.NumberFormat("es-MX", {
     style: "currency",
     currency: "MXN",
-    minimumFractionDigits: 0,
+    minimumFractionDigits: showCents ? 2 : 0,
     maximumFractionDigits: showCents ? 2 : 0,
   }).format(rounded);
 }

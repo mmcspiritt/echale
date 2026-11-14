@@ -19,6 +19,7 @@ export async function GET(
     id: payment.id,
     status: payment.status,
     paidAt: payment.paidAt,
+    createdAt: payment.createdAt,
     providerTransactionId: payment.providerTransactionId,
     codiQrId: payment.providerChargeId,
     storyTitle: story?.title ?? null,

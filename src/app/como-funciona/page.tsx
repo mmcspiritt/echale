@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { HowItWorksSection } from "@/components/site/how-it-works-section";
 import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
@@ -15,6 +17,12 @@ export default function ComoFuncionaPage() {
           </p>
         </section>
         <HowItWorksSection compact={false} />
+        <Link
+          href="/demo"
+          className="inline-flex min-h-12 items-center rounded-md bg-rosa px-5 text-small font-semibold text-white"
+        >
+          Pruébalo en vivo →
+        </Link>
       </main>
       <SiteFooter />
     </div>

@@ -7,7 +7,7 @@ const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
   display: "swap",
-  weight: ["600", "700"],
+  axes: ["SOFT", "WONK"],
 });
 
 const instrumentSans = Instrument_Sans({

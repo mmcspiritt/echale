@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { toPublicStory } from "@/lib/public-story";
 import { getStoryBySlugWithStats, listSupportersForStory } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -25,7 +26,7 @@ export async function GET(
 
   const supporters = await listSupportersForStory(story.id);
   return NextResponse.json({
-    story,
+    story: toPublicStory(story),
     supporters,
   });
 }

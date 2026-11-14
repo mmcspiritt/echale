@@ -3,6 +3,7 @@ import { DiscoverView } from "@/components/home/discover-view";
 import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
 import { getPublicBaseUrl } from "@/lib/site-url";
+import { getPlatformStats } from "@/lib/platform-stats";
 import { listPublicStoriesWithStats, seedDemoStories } from "@/lib/store";
 
 export const revalidate = 0;
@@ -30,12 +31,12 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   await seedDemoStories();
-  const stories = await listPublicStoriesWithStats();
+  const [stories, stats] = await Promise.all([listPublicStoriesWithStats(), getPlatformStats()]);
 
   return (
     <div className="min-h-screen bg-paper">
       <SiteHeader />
-      <DiscoverView stories={stories} />
+      <DiscoverView stories={stories} realTotal={stats.totals.amountRaisedRealTotal} />
       <SiteFooter />
     </div>
   );

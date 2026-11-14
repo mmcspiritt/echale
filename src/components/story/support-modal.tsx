@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import { CheckCircle2, ChevronDown, Loader2, X } from "lucide-react";
 import QRCode from "qrcode";
 
+import { PaymentTrace } from "@/components/story/payment-trace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/lib/utils";
-
-const amountOptions = [50, 100, 200, 500];
 
 interface CheckoutState {
   paymentId: string;
@@ -24,6 +23,7 @@ interface CheckoutState {
 interface PaymentStatusSnapshot {
   status: string;
   paidAt: string | null;
+  createdAt: string | null;
   providerTransactionId: string | null;
   codiQrId: string | null;
 }
@@ -34,6 +34,9 @@ export function SupportModal({
   storyTitle,
   organizationName,
   initialAmount,
+  remaining = 0,
+  raisedBefore = null,
+  kiosk = false,
   onClose,
   onPaid,
 }: {
@@ -42,6 +45,9 @@ export function SupportModal({
   storyTitle: string;
   organizationName: string;
   initialAmount: number;
+  remaining?: number;
+  raisedBefore?: number | null;
+  kiosk?: boolean;
   onClose: () => void;
   onPaid: () => void;
 }) {
@@ -55,8 +61,19 @@ export function SupportModal({
   const [checkout, setCheckout] = useState<CheckoutState | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [payPath, setPayPath] = useState<"qr" | "phone">("qr");
   const [status, setStatus] = useState<"idle" | "pending" | "paid">("idle");
   const [statusSnapshot, setStatusSnapshot] = useState<PaymentStatusSnapshot | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  const amountOptions = useMemo(() => {
+    const options = initialAmount === 10 ? [10, 50, 100, 200, 500] : [50, 100, 200, 500];
+    if (initialAmount > 0 && !options.includes(initialAmount)) options.unshift(initialAmount);
+    if (remaining > 0 && remaining <= 600 && !options.includes(remaining)) options.push(remaining);
+    return options;
+  }, [initialAmount, remaining]);
 
   const resolvedAmount = useMemo(() => {
     if (customAmount.trim().length > 0) {
@@ -65,6 +82,56 @@ export function SupportModal({
     }
     return amount;
   }, [amount, customAmount]);
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const panel = panelRef.current;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    panel?.focus();
+
+    function focusable() {
+      if (!panel) return [];
+      return [...panel.querySelectorAll<HTMLElement>("a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), summary")].filter(
+        (element) => !element.hasAttribute("disabled"),
+      );
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = focusable();
+      if (items.length === 0) {
+        event.preventDefault();
+        panel?.focus();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || active === panel)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      } else if (active && panel && !panel.contains(active)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, []);
 
   useEffect(() => {
     if (!checkout?.qrString) return;
@@ -205,8 +272,8 @@ export function SupportModal({
       ["Historia", storyTitle],
       ["Beneficiario", personName],
       ["Fecha (CDMX)", mexicoDateTime(statusSnapshot?.paidAt)],
-      ["Pey transactionId", shortId(statusSnapshot?.providerTransactionId)],
-      ["CoDi QR ID", shortId(statusSnapshot?.codiQrId ?? checkout.codiQrId)],
+      ["Folio Pey", shortId(statusSnapshot?.providerTransactionId)],
+      ["Folio CoDi", shortId(statusSnapshot?.codiQrId ?? checkout.codiQrId)],
       ["Gestionado por", organizationName],
     ];
 
@@ -221,7 +288,7 @@ export function SupportModal({
 
     ctx.fillStyle = "#4A453F";
     ctx.font = "500 24px Instrument Sans, Arial, sans-serif";
-    ctx.fillText("Échale · Confirmado por CoDi vía Pey", 64, 635);
+    ctx.fillText("✓ Confirmado por CoDi", 64, 635);
 
     const link = document.createElement("a");
     link.href = canvas.toDataURL("image/png");
@@ -229,243 +296,288 @@ export function SupportModal({
     link.click();
   }
 
+  const chipClass = (selected: boolean) =>
+    `min-h-11 rounded-md border px-3 py-2 text-center text-small font-semibold transition ${
+      selected
+        ? "border-transparent bg-ink text-[#F7F3EC] ring-2 ring-ink ring-offset-2"
+        : "border-transparent bg-transparent text-ink"
+    }`;
+
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-0 md:items-center md:p-8">
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-0 md:items-center md:p-8"
+      onClick={onClose}
+    >
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="support-dialog-title"
+        tabIndex={-1}
         data-testid="support-modal-panel"
-        className="h-auto max-h-[92dvh] w-full overflow-auto rounded-t-xl border border-line bg-paper p-5 shadow-card md:max-h-[90vh] md:max-w-xl md:rounded-xl md:p-7"
+        onClick={(event) => event.stopPropagation()}
+        className="flex h-auto max-h-[90dvh] w-full flex-col overflow-hidden rounded-t-xl border border-line bg-paper shadow-card outline-none md:max-w-xl md:rounded-xl"
       >
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h3 className="text-h2 text-ink">
-              Apoyar a {personName}
-            </h3>
-            <p className="mt-0.5 text-small text-ink-2">Pagas con CoDi desde tu banco · sin comisión</p>
+        <div className="shrink-0 px-5 pt-3 md:px-7 md:pt-5">
+          <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-line md:hidden" aria-hidden="true" />
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div>
+              <h3 id="support-dialog-title" className="text-h2 text-ink">
+                Apoyar a {personName}
+              </h3>
+              {remaining > 0 ? (
+                <p className="mt-1 text-small text-ink-2">Faltan {formatCurrency(remaining)} para la meta</p>
+              ) : null}
+            </div>
+            <button
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-ink-2 transition hover:bg-black/5"
+              onClick={onClose}
+              aria-label="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <button
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-ink-2 transition hover:bg-black/5"
-            onClick={onClose}
-            aria-label="Cerrar"
-          >
-            <X className="h-5 w-5" />
-          </button>
         </div>
 
-        {!checkout ? (
-          <div className="space-y-4 pb-20">
-            <p className="text-body text-ink-2">
-              Elige cuánto quieres dar. Te mostramos un QR para pagar desde tu app bancaria.
-            </p>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 md:px-7">
+          {!checkout ? (
+            <div className="space-y-4 pb-4">
+              <p className="text-body text-ink-2">Te mostramos un QR para que pagues desde la app de tu banco.</p>
 
-            <div className="grid grid-cols-4 gap-2">
-              {amountOptions.map((option) => (
-                <button
-                  key={option}
-                  onClick={() => {
-                    setAmount(option);
-                    setCustomAmount("");
-                  }}
-                  className={`min-h-11 rounded-md border px-3 py-2 text-center text-small font-semibold transition ${
-                    amount === option && customAmount.length === 0
-                      ? "border-ink bg-ink text-white"
-                      : "border-line bg-white text-ink-2 hover:border-ink-2/40"
-                  }`}
-                >
-                  {formatCurrency(option)}
+              <div className="flex flex-wrap gap-2">
+                {amountOptions.map((option) => {
+                  const selected = amount === option && customAmount.length === 0;
+                  const completar = remaining > 0 && remaining <= 600 && option === remaining;
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => {
+                        setAmount(option);
+                        setCustomAmount("");
+                      }}
+                      className={chipClass(selected)}
+                    >
+                      {completar ? `Completar · ${formatCurrency(option)}` : formatCurrency(option)}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-small font-medium text-ink" htmlFor="custom-amount">Otro monto</label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-2">$</span>
+                  <Input
+                    id="custom-amount"
+                    inputMode="decimal"
+                    placeholder="350"
+                    value={customAmount}
+                    onChange={(event) => setCustomAmount(event.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button type="button" className={chipClass(payPath === "qr")} onClick={() => setPayPath("qr")}>
+                  Pagar con QR
                 </button>
-              ))}
-            </div>
+                <button type="button" className={chipClass(payPath === "phone")} onClick={() => setPayPath("phone")}>
+                  Recibir cobro en mi celular
+                </button>
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-small font-medium text-ink">Otro monto</label>
-              <Input
-                inputMode="decimal"
-                placeholder="Ej. 350"
-                value={customAmount}
-                onChange={(event) => setCustomAmount(event.target.value)}
-              />
-            </div>
-
-            <details
-              className="border-t border-line"
-              onToggle={(event) => setDetailsOpen((event.currentTarget as HTMLDetailsElement).open)}
-            >
-              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between text-small font-medium text-ink">
-                Agregar nombre y mensaje
-                <ChevronDown className={`h-4 w-4 transition ${detailsOpen ? "rotate-180" : ""}`} />
-              </summary>
-              <div className="mt-3 space-y-3">
+              {payPath === "phone" ? (
                 <div className="space-y-2">
-                  <label className="text-small font-medium text-ink">Tu nombre (opcional)</label>
+                  <label className="text-small font-medium text-ink" htmlFor="support-phone">Celular</label>
                   <Input
-                    placeholder="Como quieras aparecer"
-                    value={donorName}
-                    onChange={(event) => setDonorName(event.target.value)}
-                    maxLength={80}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-small font-medium text-ink">Mensaje (opcional)</label>
-                  <Textarea
-                    placeholder={`Buen viaje, ${personName.split(" ")[0]}`}
-                    value={message}
-                    onChange={(event) => setMessage(event.target.value)}
-                    maxLength={180}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-small font-medium text-ink">
-                    Recibir la solicitud en mi celular (opcional)
-                  </label>
-                  <Input
-                    placeholder="5512345678"
+                    id="support-phone"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel-national"
+                    placeholder="10 dígitos"
                     value={phone}
-                    onChange={(event) =>
-                      setPhone(event.target.value.replace(/[^\d]/g, "").slice(0, 10))
-                    }
+                    onChange={(event) => setPhone(event.target.value.replace(/[^\d]/g, "").slice(0, 10))}
                     maxLength={10}
                   />
                 </div>
-              </div>
-            </details>
+              ) : null}
 
-            {error ? (
-              <p className="rounded-md bg-rose-50 p-3 text-small text-rose-700">{error}</p>
-            ) : null}
-
-            <div className="sticky bottom-0 -mx-5 mt-4 border-t border-line bg-paper px-5 pb-[max(16px,env(safe-area-inset-bottom))] pt-3">
-              <Button className="w-full" size="lg" onClick={submitSupport} disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generando cobro...
-                  </>
-                ) : (
-                  <>Apoyar con CoDi · {formatCurrency(resolvedAmount)}</>
-                )}
-              </Button>
-            </div>
-          </div>
-        ) : status === "paid" ? (
-          <div className="space-y-5 text-center">
-            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-emerald-100">
-              <CheckCircle2 className="h-10 w-10 text-emerald-600" />
-            </div>
-            <h4 className="text-h2 text-ink">¡Gracias por echar la mano!</h4>
-            <p className="text-small text-ink-2">
-              Tu apoyo ya se registró y la meta se actualizó en tiempo real.
-            </p>
-            <p className="rounded-md bg-white px-4 py-3 text-body font-semibold text-rosa shadow-card">
-              Aporte confirmado: {formatCurrency(resolvedAmount)}
-            </p>
-            <div className="rounded-md border border-line bg-white p-4 text-left text-small text-ink-2 shadow-card">
-              <p className="mb-2 text-small font-semibold text-ink">Comprobante</p>
-              <div className="space-y-1">
-                <p>
-                  <span className="font-medium">Monto:</span> {formatCurrency(resolvedAmount)}
-                </p>
-                <p>
-                  <span className="font-medium">Historia:</span> {storyTitle}
-                </p>
-                <p>
-                  <span className="font-medium">Fecha (CDMX):</span>{" "}
-                  {mexicoDateTime(statusSnapshot?.paidAt)}
-                </p>
-                <p>
-                  <span className="font-medium">Pey transactionId:</span>{" "}
-                  {shortId(statusSnapshot?.providerTransactionId)}
-                </p>
-                <p>
-                  <span className="font-medium">CoDi QR ID:</span>{" "}
-                  {shortId(statusSnapshot?.codiQrId ?? checkout?.codiQrId)}
-                </p>
-                <p>
-                  <span className="font-medium">Gestionado por:</span> {organizationName}
-                </p>
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Button variant="outline" className="w-full" onClick={downloadReceiptPng}>
-                Descargar comprobante
-              </Button>
-              <Button className="w-full" onClick={onClose}>
-                Cerrar
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-5">
-            <div>
-              <p className="text-small text-ink-2">
-                Vas a apoyar con{" "}
-                <strong className="font-display text-2xl tabular-nums text-rosa">
-                  {formatCurrency(resolvedAmount)}
-                </strong>
-              </p>
-              <ol className="mt-3 space-y-2 text-[15px] leading-relaxed text-ink-2">
-                <li>
-                  <span className="mr-2 font-semibold text-rosa">1.</span>Abre tu app bancaria.
-                </li>
-                <li>
-                  <span className="mr-2 font-semibold text-rosa">2.</span>Escanea este QR CoDi.
-                </li>
-                <li>
-                  <span className="mr-2 font-semibold text-rosa">3.</span>Confirma tu pago.
-                </li>
-              </ol>
-              <div className="mt-4 flex justify-center">
-                {qrDataUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={qrDataUrl}
-                    alt="Código QR CoDi"
-                    className="h-60 w-60 rounded-md bg-white p-4"
-                  />
-                ) : (
-                  <div className="grid h-60 w-60 place-items-center rounded-md bg-[#efe8dc] text-ink-2">
-                    Cargando QR...
+              <details
+                className="border-t border-line"
+                onToggle={(event) => setDetailsOpen((event.currentTarget as HTMLDetailsElement).open)}
+              >
+                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between text-small font-medium text-ink">
+                  Agregar nombre y mensaje
+                  <ChevronDown className={`h-4 w-4 transition ${detailsOpen ? "rotate-180" : ""}`} />
+                </summary>
+                <div className="mt-3 space-y-3">
+                  <div className="space-y-2">
+                    <label className="text-small font-medium text-ink" htmlFor="support-name">Tu nombre (opcional)</label>
+                    <Input
+                      id="support-name"
+                      placeholder="Como quieras aparecer"
+                      value={donorName}
+                      onChange={(event) => setDonorName(event.target.value)}
+                      maxLength={80}
+                    />
                   </div>
-                )}
+                  <div className="space-y-2">
+                    <label className="text-small font-medium text-ink" htmlFor="support-message">Mensaje (opcional)</label>
+                    <Textarea
+                      id="support-message"
+                      placeholder={`Buen viaje, ${personName.split(" ")[0]}`}
+                      value={message}
+                      onChange={(event) => setMessage(event.target.value)}
+                      maxLength={180}
+                    />
+                  </div>
+                </div>
+              </details>
+            </div>
+          ) : status === "paid" ? (
+            <div className="space-y-5 pb-5 text-center">
+              <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-emerald-100">
+                <CheckCircle2 className="h-10 w-10 text-emerald-600" />
               </div>
-              <div className="mt-4 hidden [@media(pointer:coarse)]:block">
-                <Button variant="outline" className="h-12 w-full" onClick={saveQrToPhotos}>
-                  Guardar QR en mis fotos
-                </Button>
-                <p className="mt-2 text-small text-ink-2">
-                  Luego ábrelo en tu app bancaria: CoDi → Pagar con QR → elegir de la galería.
-                </p>
-              </div>
-              <p className="mt-3 text-center font-mono text-small text-ink-2">
-                Referencia {checkout.codiQrId}
+              <h4 className="text-h2 text-ink">¡Gracias por echar la mano!</h4>
+              <p className="text-small text-ink-2">Tu apoyo ya se registró y la meta se actualizó en tiempo real.</p>
+              <p className="rounded-md bg-white px-4 py-3 text-body font-semibold text-rosa">
+                Aporte confirmado: {formatCurrency(resolvedAmount)}
               </p>
-              <p className="mt-2 inline-flex items-center gap-2 text-small text-ink-2">
+              <div className="rounded-md border border-line bg-white p-4 text-left text-small text-ink-2">
+                <p className="mb-2 text-small font-semibold text-ink">Comprobante</p>
+                <div className="space-y-1">
+                  <p><span className="font-medium text-ink">Monto:</span> {formatCurrency(resolvedAmount)}</p>
+                  <p><span className="font-medium text-ink">Historia:</span> {storyTitle}</p>
+                  <p><span className="font-medium text-ink">Fecha (CDMX):</span> {mexicoDateTime(statusSnapshot?.paidAt)}</p>
+                  <p><span className="font-medium text-ink">Folio Pey:</span> {shortId(statusSnapshot?.providerTransactionId)}</p>
+                  <p><span className="font-medium text-ink">Folio CoDi:</span> {shortId(statusSnapshot?.codiQrId ?? checkout?.codiQrId)}</p>
+                  <p><span className="font-medium text-ink">Gestionado por:</span> {organizationName}</p>
+                </div>
+              </div>
+              <PaymentTrace
+                createdAt={statusSnapshot?.createdAt}
+                paidAt={statusSnapshot?.paidAt}
+                verified={Boolean(statusSnapshot?.providerTransactionId)}
+                beforeAmount={raisedBefore}
+                afterAmount={raisedBefore == null ? null : raisedBefore + resolvedAmount}
+              />
+              <div className="grid gap-2">
+                <a
+                  className="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-rosa px-4 text-small font-semibold text-white"
+                  href={`https://wa.me/?text=${encodeURIComponent(
+                    `Comprobante de mi apoyo a ${personName}: ${typeof window !== "undefined" ? window.location.origin : ""}/apoyo/${checkout?.paymentId ?? ""}`,
+                  )}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Mandar comprobante por WhatsApp
+                </a>
+                <Button variant="outline" className="w-full" onClick={downloadReceiptPng}>
+                  Guardar imagen
+                </Button>
+                <Button variant="ghost" className="w-full" onClick={onClose}>
+                  Cerrar
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-5 pb-5">
+              <div className="hidden space-y-3 [@media(pointer:coarse)]:block">
+                {checkout.paymentLink ? (
+                  <a
+                    href={checkout.paymentLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-rosa px-4 text-small font-semibold text-white"
+                  >
+                    Abrir mi app bancaria
+                  </a>
+                ) : (
+                  <Button className="h-12 w-full" onClick={saveQrToPhotos}>
+                    Guardar QR en mis fotos
+                  </Button>
+                )}
+                <p className="text-small text-ink-2">
+                  Guarda el QR → En tu app: CoDi → Pagar con QR → Galería → Confirma
+                </p>
+                <div className="flex justify-center">
+                  {qrDataUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={qrDataUrl} alt="Código QR CoDi" className={kiosk ? "h-72 w-72 max-w-full rounded-md bg-white p-2" : "h-44 w-44 rounded-md bg-white p-2"} />
+                  ) : (
+                    <div className="grid h-44 w-44 place-items-center rounded-md bg-[#efe8dc] text-small text-ink-2">Cargando QR...</div>
+                  )}
+                </div>
+                <p className="text-center text-small text-ink-2">¿Estás en compu u otro celular? Escanéalo directo.</p>
+              </div>
+
+              <div className="[@media(pointer:coarse)]:hidden">
+                <p className="text-small text-ink-2">
+                  Vas a apoyar con{" "}
+                  <strong className="font-display text-2xl tabular-nums text-rosa">{formatCurrency(resolvedAmount)}</strong>
+                </p>
+                <ol className="mt-3 space-y-2 text-[15px] leading-relaxed text-ink-2">
+                  <li><span className="mr-2 font-semibold text-rosa">1.</span>Abre tu app bancaria.</li>
+                  <li><span className="mr-2 font-semibold text-rosa">2.</span>Escanea este QR CoDi.</li>
+                  <li><span className="mr-2 font-semibold text-rosa">3.</span>Confirma tu pago.</li>
+                </ol>
+                <div className="mt-4 flex justify-center">
+                  {qrDataUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={qrDataUrl} alt="Código QR CoDi" className={kiosk ? "h-80 w-80 max-w-full rounded-md bg-white p-4" : "h-60 w-60 rounded-md bg-white p-4"} />
+                  ) : (
+                    <div className="grid h-60 w-60 place-items-center rounded-md bg-[#efe8dc] text-ink-2">Cargando QR...</div>
+                  )}
+                </div>
+                {checkout.paymentLink ? (
+                  <a
+                    href={checkout.paymentLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 block rounded-md border border-line bg-white p-3 text-small font-medium text-ink hover:bg-black/5"
+                  >
+                    Abrir en app bancaria
+                  </a>
+                ) : null}
+              </div>
+
+              <p className="text-small text-ink-2">Antes de confirmar, tu banco te muestra el titular de la cuenta.</p>
+              <p className="text-center font-mono text-small text-ink-2">Referencia {checkout.codiQrId}</p>
+              <p className="inline-flex items-center gap-2 text-small text-ink-2">
                 <Loader2 className="h-4 w-4 animate-spin text-rosa" />
                 Esperando tu pago…
               </p>
-            </div>
-
-            {checkout.paymentLink ? (
-              <a
-                href={checkout.paymentLink}
-                target="_blank"
-                rel="noreferrer"
-                className="block rounded-md border border-line bg-white p-3 text-small font-medium text-ink hover:bg-black/5"
-              >
-                Abrir en app bancaria
-              </a>
-            ) : null}
-
-            {checkout.mode === "mock" ? (
-              <Button variant="secondary" className="w-full" onClick={simulatePayment}>
-                Simular pago exitoso (demo)
+              {checkout.mode === "mock" ? (
+                <Button variant="secondary" className="w-full" onClick={simulatePayment}>
+                  Simular pago exitoso (demo)
+                </Button>
+              ) : null}
+              <Button variant="ghost" className="w-full" onClick={onClose}>
+                Cerrar
               </Button>
-            ) : null}
+            </div>
+          )}
+        </div>
 
-            <Button variant="ghost" className="w-full" onClick={onClose}>
-              Cerrar
+        {!checkout ? (
+          <div className="shrink-0 border-t border-line bg-paper px-5 pt-3 pb-[max(16px,env(safe-area-inset-bottom))] md:px-7">
+            {error ? <p className="mb-3 rounded-md bg-rose-50 p-3 text-small text-rose-700">{error}</p> : null}
+            <Button className="w-full" size="lg" onClick={submitSupport} disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generando cobro...
+                </>
+              ) : (
+                <>Apoyar con {formatCurrency(resolvedAmount)}</>
+              )}
             </Button>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
