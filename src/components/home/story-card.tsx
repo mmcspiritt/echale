@@ -59,7 +59,7 @@ export function StoryCard({ story }: { story: StoryWithStats }) {
             <div className="flex items-center justify-between border-t border-zinc-100 pt-3 text-sm text-zinc-500">
               <span className="inline-flex items-center gap-1.5">
                 <Users className="h-4 w-4 text-[#E4007C]" />
-                {story.supporterCount} donantes
+                {story.supporterCount} {story.supporterCount === 1 ? "donante" : "donantes"}
               </span>
               <span className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400">
                 /{story.slug}

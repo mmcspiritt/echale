@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 
@@ -14,9 +14,35 @@ export function QrCardDownload({
   slug: string;
 }) {
   const [busy, setBusy] = useState(false);
+  const [qrPreview, setQrPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const pageUrl = getPageUrl(slug);
+    if (!pageUrl) return;
+
+    void QRCode.toDataURL(pageUrl, {
+      width: 500,
+      margin: 1,
+      color: { dark: "#111827", light: "#FFFFFF" },
+    })
+      .then((url) => {
+        if (!active) return;
+        setQrPreview(url);
+      })
+      .catch(() => {
+        if (!active) return;
+        setQrPreview(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [slug]);
 
   async function drawPosterCanvas() {
-    const pageUrl = `${window.location.origin}/${slug}`;
+    const pageUrl = getPageUrl(slug);
+    if (!pageUrl) throw new Error("No se pudo construir el enlace de la historia");
     const qrDataUrl = await QRCode.toDataURL(pageUrl, {
       width: 500,
       margin: 1,
@@ -114,15 +140,36 @@ export function QrCardDownload({
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
-      <Button variant="outline" size="sm" onClick={downloadPng} disabled={busy}>
-        Descargar PNG
-      </Button>
-      <Button variant="outline" size="sm" onClick={downloadPdf} disabled={busy}>
-        Descargar PDF
-      </Button>
+    <div className="space-y-4">
+      <div className="grid place-items-center rounded-2xl border border-[#f4bfd8] bg-gradient-to-b from-[#fff7fc] to-white p-4">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-3 shadow-[0_10px_28px_rgba(15,23,42,0.08)]">
+          {qrPreview ? (
+            <img
+              src={qrPreview}
+              alt={`Código QR para apoyar la historia de ${personName}`}
+              className="h-44 w-44 rounded-xl"
+            />
+          ) : (
+            <div className="h-44 w-44 animate-pulse rounded-xl bg-zinc-100" />
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm" onClick={downloadPng} disabled={busy}>
+          Descargar PNG
+        </Button>
+        <Button variant="outline" size="sm" onClick={downloadPdf} disabled={busy}>
+          Descargar PDF
+        </Button>
+      </div>
     </div>
   );
+}
+
+function getPageUrl(slug: string) {
+  if (typeof window === "undefined") return "";
+  return `${window.location.origin}/${slug}`;
 }
 
 function roundRect(

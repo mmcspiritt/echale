@@ -109,7 +109,9 @@ export function LiveStatsStrip({
             <p className="text-lg font-bold text-zinc-900">{formatCurrency(animatedAmount)}</p>
           </div>
           <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2">
-            <p className="text-zinc-500">Personas que ayudaron</p>
+            <p className="text-zinc-500">
+              {Math.round(animatedSupporters) === 1 ? "Persona que ayudó" : "Personas que ayudaron"}
+            </p>
             <p className="text-lg font-bold text-zinc-900">{Math.round(animatedSupporters)}</p>
           </div>
         </div>

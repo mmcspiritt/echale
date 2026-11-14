@@ -15,6 +15,10 @@ function mxDateKey(date: Date) {
   return mxDateFormatter.format(date);
 }
 
+function roundMoney(value: number) {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
 export async function GET() {
   const stories = await listPublicStoriesWithStats();
   const totals = stories.reduce(
@@ -50,11 +54,14 @@ export async function GET() {
 
   return NextResponse.json({
     totals: {
-      amountRaised: totals.amountRaised,
+      amountRaised: roundMoney(totals.amountRaised),
       supporters: totals.supporters,
       stories: stories.length,
-      amountRaisedToday,
+      amountRaisedToday: roundMoney(amountRaisedToday),
     },
-    recentPayments: recent,
+    recentPayments: recent.map((item) => ({
+      ...item,
+      amount: roundMoney(item.amount),
+    })),
   });
 }

@@ -8,17 +8,21 @@ export function ProgressRing({
   value,
   size = 180,
   stroke = 13,
+  caption = "de tu meta",
   className,
 }: {
   value: number;
   size?: number;
   stroke?: number;
+  caption?: string;
   className?: string;
 }) {
   const normalized = Math.max(0, Math.min(100, value));
   const radius = (size - stroke) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (normalized / 100) * circumference;
+  const compact = size < 130;
+  const percentageFontSize = compact ? "text-2xl" : "text-5xl";
 
   return (
     <div className={cn("relative inline-grid place-items-center", className)}>
@@ -42,9 +46,9 @@ export function ProgressRing({
           transition={{ duration: 0.6 }}
         />
       </svg>
-      <div className="absolute text-center">
-        <p className="text-5xl font-black text-[#E4007C]">{normalized}%</p>
-        <p className="text-sm text-zinc-500">de tu meta</p>
+      <div className="absolute grid place-items-center text-center leading-none">
+        <p className={cn("font-black text-[#E4007C]", percentageFontSize)}>{normalized}%</p>
+        {!compact ? <p className="mt-1 text-sm text-zinc-500">{caption}</p> : null}
       </div>
     </div>
   );

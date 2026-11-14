@@ -6,12 +6,14 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number) {
+  const rounded = Math.round((amount + Number.EPSILON) * 100) / 100;
+  const hasCents = Math.abs(rounded % 1) > 0.000001;
   return new Intl.NumberFormat("es-MX", {
     style: "currency",
     currency: "MXN",
     minimumFractionDigits: 0,
-    maximumFractionDigits: Number.isInteger(amount) ? 0 : 2,
-  }).format(amount);
+    maximumFractionDigits: hasCents ? 2 : 0,
+  }).format(rounded);
 }
 
 export function formatCompactCurrency(amount: number) {
@@ -39,6 +41,10 @@ export function toSlug(input: string) {
 
 export function amountToDisplay(amount: number) {
   return amount.toLocaleString("es-MX");
+}
+
+export function peopleHelpedLabel(count: number) {
+  return count === 1 ? "1 persona ha ayudado" : `${count} personas han ayudado`;
 }
 
 export function maskClabe(clabe: string) {

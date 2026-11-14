@@ -102,13 +102,9 @@ export default async function OpenGraphImage({
             }}
           >
             <span style={{ fontWeight: 800 }}>{formatCurrency(story.amountRaised)}</span>
-            <span style={{ color: "#4B5563", fontSize: 28 }}>
-              de {formatCurrency(story.goalAmount)}
-            </span>
+            <span style={{ color: "#4B5563", fontSize: 28 }}>{`de ${formatCurrency(story.goalAmount)}`}</span>
           </div>
-          <div style={{ fontSize: 28, color: "#6B7280" }}>
-            Gestionado por {story.organizationName}
-          </div>
+          <div style={{ fontSize: 28, color: "#6B7280" }}>{`Gestionado por ${story.organizationName}`}</div>
         </div>
       </div>
     ),

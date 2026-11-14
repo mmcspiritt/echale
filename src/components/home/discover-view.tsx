@@ -45,14 +45,6 @@ export function DiscoverView({ stories }: { stories: StoryWithStats[] }) {
   return (
     <section className="mx-auto w-full max-w-7xl px-4 pb-14 md:px-8">
       <div className="relative mt-6 overflow-hidden rounded-[34px] border border-zinc-200 bg-gradient-to-br from-[#fff8fc] via-white to-[#fffaf4] p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] md:mt-8 md:p-10">
-        <div className="pointer-events-none absolute inset-x-7 top-5 hidden items-end justify-between opacity-25 md:flex">
-          {Array.from({ length: 12 }).map((_, index) => (
-            <span
-              key={index}
-              className="h-4 w-8 rounded-b-md border border-[#e9b6d3] bg-[#ffe6f3]"
-            />
-          ))}
-        </div>
         <div className="grid items-center gap-7 md:grid-cols-[1.1fr_0.9fr]">
           <div className="relative space-y-5 md:pl-2">
             <p className="inline-flex rounded-full border border-[#f7c6df] bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#E4007C]">
@@ -85,11 +77,15 @@ export function DiscoverView({ stories }: { stories: StoryWithStats[] }) {
                 <p className="text-base font-bold text-zinc-900">{formatCurrency(globalTotals.amount)}</p>
               </div>
               <div className="rounded-2xl border border-zinc-200 bg-white px-3 py-2">
-                <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">Donantes</p>
+                <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">
+                  {globalTotals.people === 1 ? "Donante" : "Donantes"}
+                </p>
                 <p className="text-base font-bold text-zinc-900">{globalTotals.people}</p>
               </div>
               <div className="rounded-2xl border border-zinc-200 bg-white px-3 py-2">
-                <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">Historias</p>
+                <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">
+                  {stories.length === 1 ? "Historia" : "Historias"}
+                </p>
                 <p className="text-base font-bold text-zinc-900">{stories.length}</p>
               </div>
             </div>
@@ -163,8 +159,8 @@ export function DiscoverView({ stories }: { stories: StoryWithStats[] }) {
             recaudados
           </p>
           <p className="text-sm text-zinc-600">
-            <span className="text-xl font-semibold text-zinc-900">{filteredTotals.people}</span> personas
-            ayudaron
+            <span className="text-xl font-semibold text-zinc-900">{filteredTotals.people}</span>{" "}
+            {filteredTotals.people === 1 ? "persona ayudó" : "personas ayudaron"}
           </p>
         </div>
       </div>

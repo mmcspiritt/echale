@@ -88,10 +88,12 @@ export default async function HomeOpenGraphImage() {
             }}
           >
             <span style={{ fontWeight: 800 }}>{formatCurrency(totals.amount)}</span>
-            <span style={{ color: "#4B5563", fontSize: 28 }}>{totals.people} apoyos</span>
+            <span style={{ color: "#4B5563", fontSize: 28 }}>
+              {totals.people} {totals.people === 1 ? "apoyo" : "apoyos"}
+            </span>
           </div>
           <div style={{ fontSize: 28, color: "#6B7280" }}>
-            {`${stories.length} historias activas`}
+            {`${stories.length} ${stories.length === 1 ? "historia activa" : "historias activas"}`}
           </div>
         </div>
       </div>

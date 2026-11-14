@@ -45,7 +45,11 @@ const sql = usePostgres
     })
   : null;
 
-let schemaPromise: Promise<void> | null = null;
+const storeGlobals = globalThis as typeof globalThis & {
+  __echaleSchemaPromise?: Promise<void>;
+};
+
+let schemaPromise: Promise<void> | null = storeGlobals.__echaleSchemaPromise ?? null;
 
 interface MockStoreData {
   stories: Story[];
@@ -206,6 +210,7 @@ async function ensurePostgresSchema() {
         CREATE INDEX IF NOT EXISTS stories_preview_token_idx ON stories (preview_token);
       `;
     })();
+    storeGlobals.__echaleSchemaPromise = schemaPromise;
   }
   await schemaPromise;
 }

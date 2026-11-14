@@ -13,7 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { StoryLiveData } from "@/lib/types";
 import { displayDomainFromUrl } from "@/lib/site-url";
-import { formatCurrency, percentFromAmounts } from "@/lib/utils";
+import { formatCurrency, peopleHelpedLabel, percentFromAmounts } from "@/lib/utils";
 
 const fetcher = async (url: string) => {
   const response = await fetch(url, { cache: "no-store" });
@@ -296,8 +296,8 @@ export function StoryExperience({
               <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
                 Meta actual
               </p>
-              <div className="grid items-center gap-4 sm:grid-cols-[96px_1fr] lg:grid-cols-1">
-                <ProgressRing value={percent} size={96} stroke={10} />
+              <div className="grid items-center gap-4 sm:grid-cols-[112px_1fr] lg:grid-cols-1">
+                <ProgressRing value={percent} size={112} stroke={10} />
                 <div>
                   <p className="text-3xl font-black tracking-[-0.02em] text-[#E4007C]">
                     {formatCurrency(story.amountRaised)}
@@ -307,7 +307,7 @@ export function StoryExperience({
                   </p>
                   <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
                     <Users2 className="h-4 w-4" />
-                    {story.supporterCount} personas han ayudado
+                    {peopleHelpedLabel(story.supporterCount)}
                   </div>
                 </div>
               </div>
