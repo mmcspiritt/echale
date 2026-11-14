@@ -1,7 +1,6 @@
 import { ImageResponse } from "next/og";
 
-import { listPublicStoriesWithStats } from "@/lib/store";
-import { formatCurrency } from "@/lib/utils";
+import { loadOgFonts, loadOgJpeg } from "@/lib/og-assets";
 
 export const runtime = "nodejs";
 
@@ -13,15 +12,8 @@ export const size = {
 export const contentType = "image/png";
 
 export default async function HomeOpenGraphImage() {
-  const stories = await listPublicStoriesWithStats();
-  const totals = stories.reduce(
-    (acc, story) => {
-      acc.amount += story.amountRaised;
-      acc.people += story.supporterCount;
-      return acc;
-    },
-    { amount: 0, people: 0 },
-  );
+  const fonts = await loadOgFonts();
+  const imageSrc = await loadOgJpeg("/images/home-hero-3x2.webp");
 
   return new ImageResponse(
     (
@@ -30,74 +22,51 @@ export default async function HomeOpenGraphImage() {
           height: "100%",
           width: "100%",
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          background: "linear-gradient(135deg,#fff8fc,#ffffff,#fffaf4)",
-          padding: "56px 64px",
-          color: "#111827",
+          background: "#F7F3EC",
+          color: "#1C1A17",
+          fontFamily: "Instrument Sans",
         }}
       >
+        {imageSrc ? (
+          <div style={{ width: "50%", height: "100%", display: "flex" }}>
+            <img
+              src={imageSrc}
+              alt=""
+              style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 46%" }}
+            />
+          </div>
+        ) : null}
         <div
           style={{
+            width: imageSrc ? "50%" : "100%",
+            height: "100%",
             display: "flex",
+            flexDirection: "column",
             justifyContent: "space-between",
-            alignItems: "flex-start",
+            padding: 56,
           }}
         >
-          <div
-            style={{
-              color: "#E4007C",
-              fontWeight: 900,
-              fontSize: 64,
-            }}
-          >
-            Échale
+          <div style={{ display: "flex", fontFamily: "Fraunces", fontSize: 40, fontWeight: 700 }}>
+            <span style={{ color: "#C8006A" }}>É</span>
+            <span>chale</span>
           </div>
-          <div
-            style={{
-              borderRadius: 999,
-              background: "white",
-              border: "1px solid #fbcfe8",
-              color: "#BE185D",
-              padding: "10px 22px",
-              fontSize: 24,
-            }}
-          >
-            Historias verificadas
-          </div>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          <p style={{ fontSize: 56, lineHeight: 1.05, fontWeight: 800, margin: 0 }}>
-            Échale la mano a quien hoy más lo necesita
-          </p>
-          <p style={{ margin: 0, fontSize: 30, color: "#374151", maxWidth: 980 }}>
-            Metas solidarias gestionadas por organizaciones aliadas con pagos instantáneos CoDi
-            vía Pey.
-          </p>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div
             style={{
               display: "flex",
-              gap: 14,
-              alignItems: "center",
-              fontSize: 34,
-              color: "#047857",
+              fontFamily: "Fraunces",
+              fontSize: 52,
+              lineHeight: 1.05,
+              fontWeight: 700,
             }}
           >
-            <span style={{ fontWeight: 800 }}>{formatCurrency(totals.amount)}</span>
-            <span style={{ color: "#4B5563", fontSize: 28 }}>
-              {totals.people} {totals.people === 1 ? "apoyo" : "apoyos"}
-            </span>
+            Cuando alguien necesita una mano, se la echamos.
           </div>
-          <div style={{ fontSize: 28, color: "#6B7280" }}>
-            {`${stories.length} ${stories.length === 1 ? "historia activa" : "historias activas"}`}
+          <div style={{ display: "flex", fontSize: 24, color: "#4A453F" }}>
+            Historias reales. Apoyas con CoDi desde tu banco.
           </div>
         </div>
       </div>
     ),
-    size,
+    { ...size, fonts },
   );
 }

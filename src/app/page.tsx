@@ -33,7 +33,7 @@ export default async function Home() {
   const stories = await listPublicStoriesWithStats();
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd]">
+    <div className="min-h-screen bg-paper">
       <SiteHeader />
       <DiscoverView stories={stories} />
       <SiteFooter />

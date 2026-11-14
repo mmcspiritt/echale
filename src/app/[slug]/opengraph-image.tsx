@@ -1,7 +1,9 @@
 import { ImageResponse } from "next/og";
 
+import { loadOgFonts, loadOgJpeg } from "@/lib/og-assets";
+import { framingForSlug } from "@/lib/story-framing";
 import { getStoryBySlugWithStats } from "@/lib/store";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, getStoryWideImagePath, percentFromAmounts } from "@/lib/utils";
 
 export const runtime = "nodejs";
 
@@ -19,6 +21,7 @@ export default async function OpenGraphImage({
 }) {
   const { slug } = await params;
   const story = await getStoryBySlugWithStats(slug);
+  const fonts = await loadOgFonts();
 
   if (!story || story.status !== "aprobada") {
     return new ImageResponse(
@@ -30,17 +33,22 @@ export default async function OpenGraphImage({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "white",
-            color: "#111827",
+            background: "#F7F3EC",
+            color: "#1C1A17",
             fontSize: 42,
+            fontFamily: "Fraunces",
           }}
         >
           Échale
         </div>
       ),
-      size,
+      { ...size, fonts },
     );
   }
+
+  const framing = framingForSlug(story.slug);
+  const imageSrc = await loadOgJpeg(getStoryWideImagePath(story.coverImage));
+  const percent = percentFromAmounts(story.amountRaised, story.goalAmount);
 
   return new ImageResponse(
     (
@@ -49,65 +57,67 @@ export default async function OpenGraphImage({
           height: "100%",
           width: "100%",
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          background: "linear-gradient(135deg,#fff7fb,#ffffff,#fff8ef)",
-          padding: "56px 64px",
-          color: "#111827",
+          background: "#F7F3EC",
+          color: "#1C1A17",
+          fontFamily: "Instrument Sans",
         }}
       >
+        {imageSrc ? (
+          <div style={{ width: "50%", height: "100%", display: "flex" }}>
+            <img
+              src={imageSrc}
+              alt=""
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: framing.coverFocus,
+              }}
+            />
+          </div>
+        ) : null}
         <div
           style={{
+            width: imageSrc ? "50%" : "100%",
+            height: "100%",
             display: "flex",
+            flexDirection: "column",
             justifyContent: "space-between",
-            alignItems: "flex-start",
+            padding: 56,
+            background: "#F7F3EC",
           }}
         >
-          <div
-            style={{
-              color: "#E4007C",
-              fontWeight: 900,
-              fontSize: 64,
-            }}
-          >
-            Échale
+          <div style={{ display: "flex", fontFamily: "Fraunces", fontSize: 40, fontWeight: 700 }}>
+            <span style={{ color: "#C8006A" }}>É</span>
+            <span>chale</span>
           </div>
-          <div
-            style={{
-              borderRadius: 999,
-              background: "white",
-              border: "1px solid #fbcfe8",
-              color: "#BE185D",
-              padding: "10px 22px",
-              fontSize: 24,
-            }}
-          >
-            {story.location}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div
+              style={{
+                display: "flex",
+                fontFamily: "Fraunces",
+                fontSize: 52,
+                lineHeight: 1.05,
+                fontWeight: 700,
+              }}
+            >
+              {story.title}
+            </div>
           </div>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          <p style={{ fontSize: 56, lineHeight: 1.05, fontWeight: 800, margin: 0 }}>{story.title}</p>
-          <p style={{ margin: 0, fontSize: 30, color: "#374151", maxWidth: 950 }}>{story.summary}</p>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div
-            style={{
-              display: "flex",
-              gap: 14,
-              alignItems: "center",
-              fontSize: 34,
-              color: "#047857",
-            }}
-          >
-            <span style={{ fontWeight: 800 }}>{formatCurrency(story.amountRaised)}</span>
-            <span style={{ color: "#4B5563", fontSize: 28 }}>{`de ${formatCurrency(story.goalAmount)}`}</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", fontFamily: "Fraunces", fontSize: 44, fontWeight: 700 }}>
+              {`${formatCurrency(story.amountRaised)} de ${formatCurrency(story.goalAmount)}`}
+            </div>
+            <div style={{ display: "flex", width: "100%", height: 10, background: "#E4DDD2" }}>
+              <div style={{ display: "flex", width: `${percent}%`, height: 10, background: "#C8006A" }} />
+            </div>
+            <div style={{ display: "flex", fontSize: 22, color: "#4A453F" }}>
+              {`Organización: ${story.organizationName}`}
+            </div>
           </div>
-          <div style={{ fontSize: 28, color: "#6B7280" }}>{`Gestionado por ${story.organizationName}`}</div>
         </div>
       </div>
     ),
-    size,
+    { ...size, fonts },
   );
 }

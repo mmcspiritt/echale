@@ -6,18 +6,14 @@ import { Button } from "@/components/ui/button";
 
 export default function NotFoundPage() {
   return (
-    <div className="min-h-screen bg-[#fcfcfd]">
+    <div className="min-h-screen bg-paper">
       <SiteHeader />
       <main className="mx-auto flex w-full max-w-2xl flex-col items-center justify-center px-6 py-20 text-center">
-        <p className="rounded-full bg-[#fff0f8] px-4 py-1 text-sm font-medium text-[#E4007C]">
-          Historia no encontrada
-        </p>
-        <h1 className="mt-4 text-balance text-4xl font-black tracking-[-0.03em] text-zinc-900">
+        <h1 className="text-display text-balance text-ink">
           Ups, esta página ya no existe
         </h1>
-        <p className="mt-3 text-base leading-relaxed text-zinc-600">
-          Puede que la historia se haya movido o que el enlace esté incompleto. Regresa al inicio
-          para explorar otras historias activas.
+        <p className="mt-3 text-body text-ink-2">
+          Revisa el enlace o mira las historias que siguen activas.
         </p>
         <Link href="/" className="mt-6">
           <Button>Volver a historias</Button>

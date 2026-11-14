@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 
@@ -9,36 +9,19 @@ import { Button } from "@/components/ui/button";
 export function QrCardDownload({
   personName,
   slug,
+  coverImage,
+  posterLine,
+  focus = "50% 45%",
+  mode = "default",
 }: {
   personName: string;
   slug: string;
+  coverImage?: string;
+  posterLine?: string;
+  focus?: string;
+  mode?: "default" | "text-link";
 }) {
   const [busy, setBusy] = useState(false);
-  const [qrPreview, setQrPreview] = useState<string | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    const pageUrl = getPageUrl(slug);
-    if (!pageUrl) return;
-
-    void QRCode.toDataURL(pageUrl, {
-      width: 500,
-      margin: 1,
-      color: { dark: "#111827", light: "#FFFFFF" },
-    })
-      .then((url) => {
-        if (!active) return;
-        setQrPreview(url);
-      })
-      .catch(() => {
-        if (!active) return;
-        setQrPreview(null);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [slug]);
 
   async function drawPosterCanvas() {
     const pageUrl = getPageUrl(slug);
@@ -46,41 +29,58 @@ export function QrCardDownload({
     const qrDataUrl = await QRCode.toDataURL(pageUrl, {
       width: 500,
       margin: 1,
-      color: { dark: "#121212", light: "#FFFFFF" },
+      color: { dark: "#1C1A17", light: "#FFFFFF" },
     });
     const qrImage = await loadImage(qrDataUrl);
+    const posterImageSource =
+      coverImage && coverImage.startsWith("/")
+        ? `${window.location.origin}${coverImage}`
+        : coverImage ?? `${window.location.origin}/images/lupita-oaxaca.jpg`;
+    const posterImage = await loadImage(posterImageSource);
+
+    await document.fonts.load("700 76px Fraunces");
+    await document.fonts.load("500 34px Instrument Sans");
 
     const canvas = document.createElement("canvas");
     canvas.width = 1080;
-    canvas.height = 1500;
+    canvas.height = 1350;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("No se pudo crear el canvas");
 
+    drawCover(ctx, posterImage, 0, 0, 1080, 790, focus);
+    ctx.fillStyle = "#F7F3EC";
+    ctx.fillRect(0, 790, 1080, 560);
+
+    ctx.fillStyle = "#1C1A17";
+    ctx.font = "700 76px Fraunces, Georgia, serif";
+    ctx.fillText(personName, 64, 880);
+
+    ctx.fillStyle = "#4A453F";
+    ctx.font = "500 34px Instrument Sans, Arial, sans-serif";
+    const line = posterLine || "Échale la mano";
+    wrapText(ctx, line, 64, 940, 536, 42, 2);
+
+    const shortUrl = pageUrl.replace("https://", "").replace("http://", "");
+    ctx.fillStyle = "#1C1A17";
+    ctx.font = "500 28px Instrument Sans, Arial, sans-serif";
+    ctx.fillText(shortUrl, 64, 1090);
+
+    ctx.font = "700 44px Fraunces, Georgia, serif";
+    ctx.fillStyle = "#C8006A";
+    ctx.fillText("É", 64, 1270);
+    const accentWidth = ctx.measureText("É").width;
+    ctx.fillStyle = "#1C1A17";
+    ctx.fillText("chale", 64 + accentWidth, 1270);
+
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#E4007C";
-    ctx.fillRect(0, 0, canvas.width, 210);
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "700 72px Inter, Arial, sans-serif";
-    ctx.fillText("Échale", 70, 120);
-    ctx.font = "500 44px Inter, Arial, sans-serif";
-    ctx.fillText("Escanea para apoyar", 70, 185);
+    ctx.fillRect(636, 850, 380, 380);
+    ctx.drawImage(qrImage, 660, 874, 332, 332);
 
-    ctx.fillStyle = "#111827";
-    ctx.font = "700 58px Inter, Arial, sans-serif";
-    ctx.fillText(personName, 70, 330);
-    ctx.font = "400 34px Inter, Arial, sans-serif";
-    ctx.fillStyle = "#4B5563";
-    ctx.fillText("Historia gestionada por una organización aliada verificada", 70, 385);
-
-    ctx.fillStyle = "#F8FAFC";
-    roundRect(ctx, 70, 440, 940, 940, 46);
-    ctx.fill();
-
-    ctx.drawImage(qrImage, 200, 575, 680, 680);
-    ctx.fillStyle = "#6B7280";
-    ctx.font = "500 30px Inter, Arial, sans-serif";
-    ctx.fillText(pageUrl.replace("https://", "").replace("http://", ""), 220, 1300);
+    ctx.fillStyle = "#4A453F";
+    ctx.font = "500 24px Instrument Sans, Arial, sans-serif";
+    const caption = "Escanea para ver la historia";
+    const captionWidth = ctx.measureText(caption).width;
+    ctx.fillText(caption, 636 + (380 - captionWidth) / 2, 1290);
 
     return canvas;
   }
@@ -140,29 +140,26 @@ export function QrCardDownload({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid place-items-center rounded-2xl border border-[#f4bfd8] bg-gradient-to-b from-[#fff7fc] to-white p-4">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-3 shadow-[0_10px_28px_rgba(15,23,42,0.08)]">
-          {qrPreview ? (
-            <img
-              src={qrPreview}
-              alt={`Código QR para apoyar la historia de ${personName}`}
-              className="h-44 w-44 rounded-xl"
-            />
-          ) : (
-            <div className="h-44 w-44 animate-pulse rounded-xl bg-zinc-100" />
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" onClick={downloadPng} disabled={busy}>
-          Descargar PNG
-        </Button>
-        <Button variant="outline" size="sm" onClick={downloadPdf} disabled={busy}>
-          Descargar PDF
-        </Button>
-      </div>
+    <div className="flex flex-wrap gap-2">
+      {mode === "text-link" ? (
+        <button
+          type="button"
+          onClick={downloadPng}
+          disabled={busy}
+          className="inline-flex min-h-11 items-center text-small font-semibold text-ink underline underline-offset-4 hover:text-rosa disabled:opacity-50"
+        >
+          Descargar cartel con QR
+        </button>
+      ) : (
+        <>
+          <Button variant="outline" size="sm" onClick={downloadPng} disabled={busy}>
+            Descargar PNG
+          </Button>
+          <Button variant="outline" size="sm" onClick={downloadPdf} disabled={busy}>
+            Descargar PDF
+          </Button>
+        </>
+      )}
     </div>
   );
 }
@@ -191,6 +188,59 @@ function roundRect(
   ctx.lineTo(x, y + radius);
   ctx.quadraticCurveTo(x, y, x + radius, y);
   ctx.closePath();
+}
+
+function drawCover(
+  ctx: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  focus: string,
+) {
+  const [fx, fy] = focus.split(" ").map((part) => {
+    const value = Number.parseFloat(part);
+    return Number.isFinite(value) ? value / 100 : 0.5;
+  });
+  const scale = Math.max(width / image.width, height / image.height);
+  const drawnWidth = image.width * scale;
+  const drawnHeight = image.height * scale;
+  const offsetX = x + (width - drawnWidth) * fx;
+  const offsetY = y + (height - drawnHeight) * fy;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, width, height);
+  ctx.clip();
+  ctx.drawImage(image, offsetX, offsetY, drawnWidth, drawnHeight);
+  ctx.restore();
+}
+
+function wrapText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+  maxLines: number,
+) {
+  const words = text.split(" ");
+  const lines: string[] = [];
+  let current = "";
+  for (const word of words) {
+    const next = current ? `${current} ${word}` : word;
+    if (ctx.measureText(next).width > maxWidth && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = next;
+    }
+  }
+  if (current) lines.push(current);
+  lines.slice(0, maxLines).forEach((line, index) => {
+    ctx.fillText(line, x, y + index * lineHeight);
+  });
 }
 
 function loadImage(src: string) {

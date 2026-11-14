@@ -2,18 +2,24 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Copy, MapPin, Share2, Users2 } from "lucide-react";
+import { Copy, MapPin, Share2 } from "lucide-react";
 import useSWR from "swr";
 
+import { ArtDirectedImage } from "@/components/media/art-directed-image";
 import { QrCardDownload } from "@/components/story/qr-card-download";
-import { ProgressRing } from "@/components/story/progress-ring";
 import { SupportModal } from "@/components/story/support-modal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { framingForSlug } from "@/lib/story-framing";
 import { StoryLiveData } from "@/lib/types";
 import { displayDomainFromUrl } from "@/lib/site-url";
-import { formatCurrency, peopleHelpedLabel, percentFromAmounts } from "@/lib/utils";
+import {
+  formatCurrency,
+  getStoryWideImagePath,
+  peopleHelpedLabel,
+  percentFromAmounts,
+} from "@/lib/utils";
 
 const fetcher = async (url: string) => {
   const response = await fetch(url, { cache: "no-store" });
@@ -46,7 +52,6 @@ export function StoryExperience({
   const [copied, setCopied] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState(100);
-  const [showMobileBar, setShowMobileBar] = useState(false);
 
   const storyData = data ?? initialData;
   const story = storyData.story;
@@ -63,30 +68,24 @@ export function StoryExperience({
       : `${publicBaseUrl}/${story.slug}`;
 
   const milestoneItems = useMemo(() => {
-    function usageFromMilestoneLabel(label: string) {
-      const lower = label.toLowerCase();
-      if (lower.includes("techo")) return "Uso de los fondos: materiales de techado y mano de obra.";
-      if (lower.includes("muro")) return "Uso de los fondos: block, cemento y refuerzo estructural.";
-      if (lower.includes("piso")) return "Uso de los fondos: firme, nivelación y acabados básicos.";
-      if (lower.includes("puerta")) return "Uso de los fondos: carpintería, cerradura y colocación.";
-      if (lower.includes("cocina")) return "Uso de los fondos: instalación básica y utensilios esenciales.";
-      if (lower.includes("estudio")) return "Uso de los fondos: estudios clínicos y valoración médica.";
-      if (lower.includes("procedimiento")) return "Uso de los fondos: honorarios médicos y quirófano.";
-      if (lower.includes("rehabilit")) return "Uso de los fondos: terapias y seguimiento postoperatorio.";
-      if (lower.includes("boleto")) return "Uso de los fondos: transporte terrestre y costo de traslado.";
-      if (lower.includes("comida")) return "Uso de los fondos: alimentos durante trayecto y llegada.";
-      return "Uso de los fondos: gastos directos para completar esta etapa.";
-    }
-
     return story.milestones
       .slice()
       .sort((a, b) => a.targetAmount - b.targetAmount)
       .map((milestone) => ({
         ...milestone,
         completed: story.amountRaised >= milestone.targetAmount,
-        usage: usageFromMilestoneLabel(milestone.label),
       }));
   }, [story.amountRaised, story.milestones]);
+
+  const galleryImages = useMemo(() => {
+    const unique = Array.from(
+      new Set([story.coverImage, ...story.galleryImages].filter((item): item is string => Boolean(item))),
+    );
+    return unique.length > 0 ? unique : [story.coverImage];
+  }, [story.coverImage, story.galleryImages]);
+
+  const activeGalleryImage = galleryImages[galleryIndex] ?? story.coverImage;
+  const activeDesktopImage = getStoryWideImagePath(activeGalleryImage);
 
   const lastUpdatedLabel = useMemo(() => {
     const latestSupport = storyData.supporters[0]?.paidAt;
@@ -120,294 +119,266 @@ export function StoryExperience({
     await copyLink();
   }
 
-  useEffect(() => {
-    const updateBarVisibility = () => {
-      setShowMobileBar(window.scrollY > 170);
-    };
+  const framing = framingForSlug(story.slug);
+  const firstName = story.personName.split(" ")[0];
+  const remaining = Math.max(0, story.goalAmount - story.amountRaised);
+  const hasExampleSupport = storyData.supporters.some((supporter) => !supporter.isRealConfirmed);
 
-    updateBarVisibility();
-    window.addEventListener("scroll", updateBarVisibility, { passive: true });
-    return () => window.removeEventListener("scroll", updateBarVisibility);
-  }, []);
-
-  const supportSummaryCard = (
-    <Card className="space-y-4 border-zinc-200/90 p-5 shadow-[0_16px_34px_rgba(15,23,42,0.08)]">
-      <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
-        Meta actual
+  const amountBlock = (
+    <div className="space-y-2">
+      <p className="font-display text-5xl leading-none text-ink">{formatCurrency(story.amountRaised)}</p>
+      <p className="text-small text-ink-2">
+        reunidos de {formatCurrency(story.goalAmount)} · {percent}%
       </p>
-      <div className="grid items-center gap-4 sm:grid-cols-[112px_1fr] lg:grid-cols-1">
-        <ProgressRing value={percent} size={112} stroke={10} />
-        <div>
-          <p className="text-3xl font-black tracking-[-0.02em] text-[#E4007C]">
-            {formatCurrency(story.amountRaised)}
-          </p>
-          <p className="text-base text-zinc-600">
-            de <strong>{formatCurrency(story.goalAmount)}</strong>
-          </p>
-          <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
-            <Users2 className="h-4 w-4" />
-            {peopleHelpedLabel(story.supporterCount)}
-          </div>
-        </div>
-      </div>
-      <Progress value={percent} className="h-2.5" />
-      <div className="grid grid-cols-2 gap-2">
-        {[50, 100, 200, 500].map((option) => (
-          <button
-            key={option}
-            onClick={() => setSelectedAmount(option)}
-            className={`rounded-full border px-3 py-2 text-sm font-medium transition ${
-              selectedAmount === option
-                ? "border-[#E4007C] bg-[#fff0f8] text-[#E4007C]"
-                : "border-zinc-300 bg-white text-zinc-700"
-            }`}
-          >
-            {formatCurrency(option)}
-          </button>
-        ))}
-      </div>
-      {canReceiveSupport ? (
-        <Button size="lg" className="w-full" onClick={() => setShowModal(true)}>
-          Apoyar con CoDi
-        </Button>
-      ) : (
-        <Button size="lg" className="w-full" disabled>
-          No disponible por ahora
-        </Button>
-      )}
-      {showExampleBadge ? (
-        <p className="text-xs text-zinc-500">Historia de ejemplo para demo hackathon.</p>
-      ) : null}
-    </Card>
+      <p className="text-small text-ink-2">{peopleHelpedLabel(story.supporterCount)}</p>
+      <Progress value={percent} className="h-1.5" />
+    </div>
   );
 
-  const trustCard = (
-    <Card className="space-y-2 border-zinc-200/90 p-5 text-sm text-zinc-700">
-      <p>
-        <span className="font-semibold">Gestionado por:</span> {story.organizationName}
-      </p>
-      <p>
-        <span className="font-semibold">Cuenta receptora:</span> {story.accountHolderName}
-      </p>
-      <p>
-        <span className="font-semibold">CLABE destino:</span> {story.clabeMasked}
-      </p>
-    </Card>
+  const amountChoices = (
+    <div className="grid grid-cols-2 gap-2">
+      {[50, 100, 200, 500].map((option) => (
+        <button
+          key={option}
+          onClick={() => setSelectedAmount(option)}
+          className={`min-h-11 rounded-md border px-3 text-small transition ${
+            selectedAmount === option
+              ? "border-ink bg-ink text-white"
+              : "border-line bg-white text-ink-2"
+          }`}
+        >
+          {formatCurrency(option)}
+        </button>
+      ))}
+    </div>
+  );
+
+  const trustList = (
+    <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 border-t border-line pt-4 text-small">
+      <dt className="text-ink-2">Organización</dt>
+      <dd className="text-ink">{story.organizationName}</dd>
+      <dt className="text-ink-2">Recibe</dt>
+      <dd className="text-ink">{story.accountHolderName}</dd>
+      <dt className="text-ink-2">CLABE</dt>
+      <dd className="text-ink">{story.clabeMasked}</dd>
+    </dl>
   );
 
   return (
     <>
-      <section className="mx-auto w-full max-w-7xl px-4 pb-[calc(10rem+env(safe-area-inset-bottom))] pt-6 md:px-8 md:pb-16">
+      <section className="mx-auto w-full max-w-7xl px-4 pb-4 pt-4 md:px-8 lg:pb-16 lg:pt-6">
         {isPreview ? (
-          <Card className="mb-4 border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <Card className="mb-4 border-amber-200 bg-amber-50 p-4 text-small text-amber-900">
             Esta historia está en revisión por la organización aliada. Solo tú y el equipo pueden
             verla con este enlace de preview.
           </Card>
         ) : null}
         {codiPending ? (
-          <Card className="mb-4 border-sky-200 bg-sky-50 p-4 text-sm text-sky-900">
+          <Card className="mb-4 border-sky-200 bg-sky-50 p-4 text-small text-sky-900">
             Cuenta en verificación con Banxico (hasta 5 días hábiles). El botón de apoyo se
             habilita automáticamente en cuanto quede activa.
           </Card>
         ) : null}
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
           <article className="space-y-5">
-            <Card className="overflow-hidden border-zinc-200/90 shadow-[0_14px_36px_rgba(15,23,42,0.08)]">
-              <div className="relative aspect-[16/10] w-full">
-                <Image
-                  src={story.galleryImages[galleryIndex] ?? story.coverImage}
-                  alt={`Foto principal de ${story.personName}`}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 65vw"
-                  className="object-cover"
-                />
-              </div>
-              <div className="flex gap-2 overflow-x-auto p-3">
-                {story.galleryImages.map((image, index) => (
+            <div className="relative -mx-4 aspect-[4/3] overflow-hidden bg-[#efe8dc] md:mx-0 md:aspect-[3/2] md:rounded-xl">
+              <ArtDirectedImage
+                mobileSrc={activeGalleryImage}
+                desktopSrc={activeDesktopImage}
+                alt={`Foto principal de ${story.personName}`}
+                priority={galleryIndex === 0}
+                mobileSizes="100vw"
+                desktopSizes="65vw"
+                mobileObjectPosition={activeGalleryImage === story.coverImage ? framing.coverFocus : "50% 45%"}
+                desktopObjectPosition={activeGalleryImage === story.coverImage ? framing.coverFocus : "50% 45%"}
+                mobileBlurDataURL={framing.blurDataURL}
+                desktopBlurDataURL={framing.blurDataURL}
+              />
+            </div>
+
+            <section className="space-y-3">
+              <p className="inline-flex items-center gap-2 text-small text-ink-2">
+                <MapPin className="h-4 w-4" /> {story.location}
+              </p>
+              <h1 className="text-balance text-h2 text-ink">{story.title}</h1>
+              <div className="space-y-4 border-y border-line py-5 lg:hidden">{amountBlock}</div>
+              <p className="max-w-[68ch] text-body text-ink-2">{story.summary}</p>
+            </section>
+
+            {galleryImages.length > 1 ? (
+              <div className="flex gap-2 overflow-x-auto">
+                {galleryImages.map((image, index) => (
                   <button
                     key={`${image}-${index}`}
                     onClick={() => setGalleryIndex(index)}
-                    className={`relative h-20 w-24 shrink-0 overflow-hidden rounded-xl border-2 transition ${
-                      index === galleryIndex
-                        ? "border-[#E4007C] ring-2 ring-[#E4007C]/15"
-                        : "border-transparent"
+                    className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border transition ${
+                      index === galleryIndex ? "border-ink" : "border-line"
                     }`}
                   >
                     <Image
                       src={image}
                       alt={`Galería ${index + 1} de ${story.personName}`}
                       fill
+                      placeholder="blur"
+                      blurDataURL={framing.blurDataURL}
+                      sizes="64px"
                       className="object-cover"
+                      style={{ objectPosition: index === 0 ? framing.coverFocus : "50% 45%" }}
                     />
                   </button>
                 ))}
               </div>
-            </Card>
+            ) : null}
 
-            <Card className="space-y-4 border-zinc-200/90 p-6">
-              <p className="inline-flex items-center gap-2 rounded-full bg-[#fff2f9] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#E4007C]">
-                <MapPin className="h-3.5 w-3.5" /> {story.location}
-              </p>
-              <h1 className="text-balance text-[2rem] font-black leading-[1.05] tracking-[-0.03em] text-zinc-900 md:text-[2.5rem]">
-                {story.title}
-              </h1>
-              <p className="max-w-[68ch] text-base leading-relaxed text-zinc-700 md:text-[1.05rem]">
-                {story.story}
-              </p>
-            </Card>
+            <section className="space-y-3 border-b border-line pb-5">
+              <h2 className="text-h3 text-ink">Historia</h2>
+              <p className="max-w-[68ch] text-body text-ink-2">{story.story}</p>
+            </section>
 
-            <div className="space-y-4 lg:hidden">
-              {supportSummaryCard}
-              {trustCard}
-            </div>
+            <section className="space-y-3">
+              <h2 className="text-h3 text-ink">En qué se usa el dinero</h2>
+              <p className="text-small text-ink-2">Actualizado {lastUpdatedLabel}</p>
+              <ul className="divide-y divide-line border-y border-line">
+                {milestoneItems.map((milestone, index) => {
+                  const previous = index === 0 ? 0 : milestoneItems[index - 1].targetAmount;
+                  const cost = Math.max(0, milestone.targetAmount - previous);
+                  const isLast = index === milestoneItems.length - 1;
+                  const firstOpen = milestoneItems.find((item) => !item.completed)?.id === milestone.id;
+                  return (
+                    <li key={milestone.id} className="flex items-start justify-between gap-3 py-3">
+                      <p className="text-small text-ink">{milestone.label}</p>
+                      <div className="text-right">
+                        <p className="text-small font-semibold tabular-nums text-ink">{formatCurrency(cost)}</p>
+                        {milestone.completed ? (
+                          <p className="text-small text-jade">Cubierto</p>
+                        ) : firstOpen ? (
+                          <p className="text-small text-ink-2">Faltan {formatCurrency(remaining)}</p>
+                        ) : null}
+                        {isLast ? (
+                          <p className="text-small text-ink-2">meta {formatCurrency(story.goalAmount)}</p>
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
 
-            <Card className="space-y-4 border-zinc-200/90 p-6">
-              <p className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
-                Última actualización: {lastUpdatedLabel}
-              </p>
-              <h2 className="text-xl font-semibold tracking-[-0.01em] text-zinc-900">Avance por metas</h2>
-              <div className="space-y-4">
-                {milestoneItems.map((milestone, index) => (
-                  <div key={milestone.id} className="flex gap-3">
-                    <div className="flex w-6 flex-col items-center">
-                      <span
-                        className={`mt-1 grid h-5 w-5 place-items-center rounded-full border ${
-                          milestone.completed
-                            ? "border-emerald-600 bg-emerald-50 text-emerald-600"
-                            : "border-zinc-300 bg-white text-zinc-300"
-                        }`}
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                      </span>
-                      {index < milestoneItems.length - 1 ? (
-                        <span className="mt-1 h-full w-px bg-zinc-200" />
-                      ) : null}
-                    </div>
-                    <div className="flex-1 rounded-2xl border border-zinc-100 bg-zinc-50 px-4 py-3">
-                      <p className="text-sm font-semibold text-zinc-800">{milestone.label}</p>
-                      <p
-                        className={`mt-1 text-sm ${
-                          milestone.completed ? "font-semibold text-emerald-700" : "text-zinc-500"
-                        }`}
-                      >
-                        {formatCurrency(milestone.targetAmount)}
-                      </p>
-                      <p className="mt-1 text-xs leading-relaxed text-zinc-500">{milestone.usage}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card className="space-y-4 border-zinc-200/90 p-5">
-                <h3 className="text-lg font-semibold text-zinc-900">Comparte este enlace</h3>
-                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700">
-                  {displayDomain}/{story.slug}
-                </div>
-                <div className="grid gap-2">
-                  <Button variant="outline" onClick={copyLink}>
-                    <Copy className="mr-1.5 h-4 w-4" /> {copied ? "¡Copiado!" : "Copiar enlace"}
-                  </Button>
-                  <a
-                    className="inline-flex h-11 items-center justify-center rounded-full bg-[#25D366] px-4 text-sm font-medium text-white"
-                    href={`https://wa.me/?text=${encodeURIComponent(
-                      `Échale la mano a ${story.personName}: ${fullUrl}`,
-                    )}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Compartir por WhatsApp
-                  </a>
-                  <Button variant="outline" onClick={shareNative}>
-                    <Share2 className="mr-1.5 h-4 w-4" /> Compartir
-                  </Button>
-                </div>
-              </Card>
-
-              <Card className="space-y-4 border-zinc-200/90 p-5">
-                <h3 className="text-lg font-semibold text-zinc-900">Escanea para abrir la historia</h3>
-                <p className="text-sm text-zinc-600">
-                  Descarga una tarjeta lista para imprimir o compartir. El pago se realiza en el
-                  botón <span className="font-medium">Apoyar con CoDi</span>.
-                </p>
-                <QrCardDownload personName={story.personName} slug={story.slug} />
-              </Card>
-            </div>
-
-            <Card className="space-y-4 border-zinc-200/90 p-6">
-              <h3 className="text-xl font-semibold text-zinc-900">Mensajes recientes</h3>
+            <section className="space-y-3">
+              <h2 className="text-h3 text-ink">Quienes ya apoyaron</h2>
               {storyData.supporters.length === 0 ? (
-                <p className="rounded-2xl border border-zinc-100 bg-zinc-50 p-4 text-sm text-zinc-600">
-                  Aún no hay mensajes. Sé la primera persona en echar la mano 💗
+                <p className="border-y border-line py-4 text-small text-ink-2">
+                  Aún no hay mensajes. Sé la primera persona en apoyar.
                 </p>
               ) : (
-                <div className="space-y-3">
+                <ul className="divide-y divide-line border-y border-line">
                   {storyData.supporters.map((supporter) => (
-                    <div
-                      key={supporter.id}
-                      className="rounded-2xl border border-zinc-100 px-4 py-3 text-sm text-zinc-700"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-semibold">{supporter.donorName}</p>
-                        <p className="font-semibold text-[#0F7B59]">{formatCurrency(supporter.amount)}</p>
+                    <li key={supporter.id} className="py-3.5 text-small text-ink-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="font-semibold text-ink">{supporter.donorName}</p>
+                        <p className="shrink-0 tabular-nums font-semibold text-ink">
+                          {formatCurrency(supporter.amount)}
+                        </p>
                       </div>
                       {supporter.isRealConfirmed ? (
-                        <p className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                        <p className="mt-1 inline-flex items-center gap-1 text-micro font-semibold uppercase tracking-[0.08em] text-jade">
+                          <span className="h-2 w-2 rounded-full bg-jade" />
                           Confirmado por CoDi
                         </p>
-                      ) : (
-                        <p className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
-                          Aporte de ejemplo
-                        </p>
-                      )}
-                      {supporter.message ? (
-                        <p className="mt-1 leading-relaxed text-zinc-600">{supporter.message}</p>
                       ) : null}
-                    </div>
+                      {supporter.message ? <p className="mt-1 leading-relaxed">{supporter.message}</p> : null}
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
-            </Card>
+              {hasExampleSupport ? (
+                <p className="text-micro text-ink-2/80">Los aportes sin sello son ejemplos del demo.</p>
+              ) : null}
+            </section>
+
+            <section className="space-y-3 lg:hidden">{trustList}</section>
+
+            <section className="space-y-3">
+              <h3 className="text-h3 text-ink">Compartir</h3>
+              <p className="text-small text-ink-2">
+                {displayDomain}/{story.slug}
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <a
+                  className="inline-flex min-h-11 items-center justify-center rounded-md border border-line bg-white px-3 text-small font-semibold text-ink hover:bg-black/5"
+                  href={`https://wa.me/?text=${encodeURIComponent(
+                    `Échale la mano a ${story.personName}: ${fullUrl}`,
+                  )}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  WhatsApp
+                </a>
+                <Button variant="outline" onClick={copyLink} className="w-full px-2">
+                  <Copy className="mr-1.5 h-4 w-4" /> {copied ? "Copiado" : "Copiar"}
+                </Button>
+                <Button variant="outline" onClick={shareNative} className="w-full px-2">
+                  <Share2 className="mr-1.5 h-4 w-4" /> Más
+                </Button>
+              </div>
+              <QrCardDownload
+                personName={story.personName}
+                slug={story.slug}
+                coverImage={story.coverImage}
+                posterLine={framing.posterLine || story.title}
+                focus={"posterFocus" in framing && framing.posterFocus ? framing.posterFocus : framing.coverFocus}
+                mode="text-link"
+              />
+              <p className="text-small text-ink-2">
+                Imprímelo o mándalo por WhatsApp. Quien lo escanee verá la historia de {firstName}.
+              </p>
+            </section>
           </article>
 
-          <aside className="hidden space-y-4 lg:sticky lg:top-24 lg:block lg:self-start">
-            {supportSummaryCard}
-            {trustCard}
+          <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
+            <Card className="space-y-4 p-5">
+              {amountBlock}
+              {amountChoices}
+              {canReceiveSupport ? (
+                <Button size="lg" className="w-full" onClick={() => setShowModal(true)}>
+                  Apoyar con CoDi
+                </Button>
+              ) : (
+                <Button size="lg" className="w-full" disabled>
+                  No disponible por ahora
+                </Button>
+              )}
+              {trustList}
+              {showExampleBadge ? (
+                <p className="text-micro text-ink-2">Historia de ejemplo para demostración.</p>
+              ) : null}
+            </Card>
           </aside>
         </div>
       </section>
 
-      {showMobileBar ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 md:hidden">
-          <div className="border-t border-zinc-200 bg-white/98 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-14px_30px_rgba(15,23,42,0.1)] backdrop-blur">
-            <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
-              {[50, 100, 200, 500].map((option) => (
-                <button
-                  key={option}
-                  onClick={() => setSelectedAmount(option)}
-                  className={`shrink-0 rounded-full border px-3 py-1 text-sm font-medium transition ${
-                    selectedAmount === option
-                      ? "border-[#E4007C] bg-[#fff0f8] text-[#E4007C]"
-                      : "border-zinc-200 bg-white text-zinc-700"
-                  }`}
-                >
-                  {formatCurrency(option)}
-                </button>
-              ))}
+      <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
+        <div className="flex h-[72px] items-center justify-between gap-3 border-t border-line bg-paper px-4 pb-[env(safe-area-inset-bottom)]">
+          <div className="min-w-0">
+            <p className="leading-none">
+              <span className="font-display text-xl tabular-nums text-ink">{formatCurrency(story.amountRaised)}</span>{" "}
+              <span className="text-small text-ink-2">de {formatCurrency(story.goalAmount)}</span>
+            </p>
+            <div className="mt-2 h-1 w-28 overflow-hidden rounded-full bg-line">
+              <div className="h-full bg-rosa" style={{ width: `${percent}%` }} />
             </div>
-            {canReceiveSupport ? (
-              <Button className="w-full" size="lg" onClick={() => setShowModal(true)}>
-                Apoyar con CoDi
-              </Button>
-            ) : (
-              <Button className="w-full" size="lg" disabled>
-                No disponible por ahora
-              </Button>
-            )}
           </div>
+          {canReceiveSupport ? (
+            <Button className="h-12 shrink-0 px-6 text-white" onClick={() => setShowModal(true)}>
+              Apoyar
+            </Button>
+          ) : (
+            <Button className="h-12 shrink-0 px-6" disabled>
+              Apoyar
+            </Button>
+          )}
         </div>
-      ) : null}
+      </div>
 
       {showModal && canReceiveSupport ? (
         <SupportModal

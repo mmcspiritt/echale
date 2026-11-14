@@ -16,9 +16,9 @@ interface FormMilestone {
 }
 
 const presetImages = [
-  { label: "Oaxaca · Reconstrucción", value: "/images/lupita-oaxaca.jpg" },
-  { label: "Hospital · Salud", value: "/images/javier-hospital.jpg" },
-  { label: "Terminal · Regresar a casa", value: "/images/ramiro-terminal.jpg" },
+  { label: "Oaxaca · Reconstrucción", value: "/stories/miriam/miriam-cover-4x5.webp" },
+  { label: "Hospital · Salud", value: "/stories/santiago/santiago-cover-4x5.webp" },
+  { label: "Terminal · Regresar a casa", value: "/stories/adrian/adrian-cover-4x5.webp" },
 ];
 
 const defaultMilestones: FormMilestone[] = [
@@ -63,7 +63,7 @@ export function CreateStoryForm() {
         Number.isFinite(milestone.targetAmount) &&
         milestone.targetAmount > 0 &&
         milestone.targetAmount <= Number(goalAmount || "0"),
-    ) && photoUrl.startsWith("/");
+    ) && isAcceptedImagePath(photoUrl);
   const canSubmit = canContinueStep3 && clabe.replace(/\D/g, "").length === 18;
 
   const milestoneProgress = useMemo(() => {
@@ -121,19 +121,19 @@ export function CreateStoryForm() {
 
   if (success) {
     return (
-      <section className="rounded-3xl border border-emerald-200 bg-white p-6 shadow-[0_14px_34px_rgba(15,23,42,0.07)] md:p-8">
+      <section className="rounded-xl border border-line bg-white p-6 shadow-card md:p-8">
         <div className="mx-auto max-w-2xl space-y-4 text-center">
           <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-100">
             <CheckCircle2 className="h-9 w-9 text-emerald-600" />
           </div>
-          <h2 className="text-3xl font-black tracking-[-0.02em] text-zinc-900">
+          <h2 className="text-h2 text-ink">
             ¡Tu página ya está en revisión!
           </h2>
-          <p className="text-base leading-relaxed text-zinc-600">
+          <p className="text-body text-ink-2">
             Nuestro equipo aliado revisará la solicitud. Te avisaremos por correo cuando quede
             aprobada.
           </p>
-          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-left text-sm text-zinc-700">
+          <div className="rounded-md border border-line bg-paper p-4 text-left text-small text-ink-2">
             <p>
               <span className="font-semibold">URL preliminar:</span> /{success.slug}
             </p>
@@ -146,7 +146,7 @@ export function CreateStoryForm() {
           </div>
           <a
             href={success.previewPath}
-            className="inline-flex rounded-full bg-[#E4007C] px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(228,0,124,0.28)]"
+            className="inline-flex min-h-11 items-center rounded-md bg-rosa px-6 text-small font-semibold text-white"
           >
             Ver mi página de vista previa
           </a>
@@ -156,31 +156,27 @@ export function CreateStoryForm() {
   }
 
   return (
-    <section className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)] md:p-8">
-      <div className="mb-6 grid grid-cols-4 gap-2">
+    <section className="rounded-xl border border-line bg-white p-5 shadow-card md:p-8">
+      <div className="mb-6 grid grid-cols-4 gap-1.5">
         {[1, 2, 3, 4].map((index) => (
           <div
             key={index}
-            className={`h-2 rounded-full ${
-              index <= step ? "bg-[#E4007C]" : "bg-zinc-200"
-            }`}
+            className={`h-1 rounded-full ${index <= step ? "bg-rosa" : "bg-line"}`}
           />
         ))}
       </div>
 
       {step === 1 ? (
         <div className="space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">Paso 1 de 4</p>
-          <h2 className="text-2xl font-black tracking-[-0.02em] text-zinc-900">
-            ¿Quién necesita apoyo?
-          </h2>
+          <p className="text-small text-ink-2">Paso 1 de 4</p>
+          <h2 className="text-h3 text-ink">¿Quién necesita apoyo?</h2>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
               <label className="text-sm text-zinc-600">Nombre de la persona</label>
               <Input value={beneficiaryName} onChange={(event) => setBeneficiaryName(event.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className="text-sm text-zinc-600">Nombre titular de la cuenta</label>
+              <label className="text-sm text-zinc-600">Titular de la cuenta (como aparece en el banco)</label>
               <Input
                 value={accountHolderName}
                 onChange={(event) => setAccountHolderName(event.target.value)}
@@ -205,8 +201,8 @@ export function CreateStoryForm() {
 
       {step === 2 ? (
         <div className="space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">Paso 2 de 4</p>
-          <h2 className="text-2xl font-black tracking-[-0.02em] text-zinc-900">Cuenta tu historia</h2>
+          <p className="text-small text-ink-2">Paso 2 de 4</p>
+          <h2 className="text-h3 text-ink">Cuenta tu historia</h2>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
               <label className="text-sm text-zinc-600">Ciudad</label>
@@ -217,7 +213,7 @@ export function CreateStoryForm() {
               <select
                 value={category}
                 onChange={(event) => setCategory(event.target.value as StoryCategory)}
-                className="h-11 w-full rounded-2xl border border-zinc-200 bg-white px-3 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-[#E4007C]"
+                className="h-11 w-full rounded-md border border-line bg-white px-3 text-small text-ink focus:outline-none"
               >
                 {categories.map((item) => (
                   <option key={item.key} value={item.key}>
@@ -253,19 +249,24 @@ export function CreateStoryForm() {
 
       {step === 3 ? (
         <div className="space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">Paso 3 de 4</p>
-          <h2 className="text-2xl font-black tracking-[-0.02em] text-zinc-900">Foto y metas</h2>
+          <p className="text-small text-ink-2">Paso 3 de 4</p>
+          <h2 className="text-h3 text-ink">Foto y metas</h2>
           <div className="space-y-2">
-            <p className="text-sm text-zinc-600">Elige una foto de ejemplo para tu página</p>
+            <p className="text-small text-ink-2">Elige una foto de ejemplo o pega una ruta del sitio o una URL</p>
+            <Input
+              value={photoUrl}
+              onChange={(event) => setPhotoUrl(event.target.value.trim())}
+              placeholder="/stories/miriam/miriam-cover-4x5.webp o https://..."
+            />
             <div className="grid gap-2 md:grid-cols-3">
               {presetImages.map((item) => (
                 <button
                   key={item.value}
                   onClick={() => setPhotoUrl(item.value)}
-                  className={`rounded-2xl border px-3 py-2 text-left text-sm transition ${
+                  className={`rounded-md border px-3 py-2 text-left text-small transition ${
                     photoUrl === item.value
-                      ? "border-[#E4007C] bg-[#fff0f8] text-[#E4007C]"
-                      : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+                      ? "border-rosa bg-white text-rosa"
+                      : "border-line text-ink-2 hover:bg-paper"
                   }`}
                 >
                   {item.label}
@@ -274,8 +275,8 @@ export function CreateStoryForm() {
             </div>
           </div>
 
-          <div className="space-y-3 rounded-2xl border border-zinc-100 bg-zinc-50 p-4">
-            <p className="text-sm font-semibold text-zinc-800">Define 3 hitos de avance</p>
+          <div className="space-y-3 rounded-md border border-line bg-paper p-4">
+            <p className="text-small font-semibold text-ink">Define 3 hitos de avance</p>
             {milestones.map((milestone, index) => (
               <div key={index} className="grid gap-2 md:grid-cols-[1.5fr_1fr]">
                 <Input
@@ -294,7 +295,7 @@ export function CreateStoryForm() {
             ))}
             <div className="grid gap-2 md:grid-cols-3">
               {milestoneProgress.map((percent, index) => (
-                <p key={index} className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs text-zinc-600">
+                <p key={index} className="rounded-md border border-line bg-white px-3 py-2 text-micro text-ink-2">
                   Meta {index + 1}: {formatCurrency(milestones[index].targetAmount)} ({percent}%)
                 </p>
               ))}
@@ -313,11 +314,9 @@ export function CreateStoryForm() {
 
       {step === 4 ? (
         <div className="space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">Paso 4 de 4</p>
-          <h2 className="text-2xl font-black tracking-[-0.02em] text-zinc-900">
-            Cuenta bancaria en Pey
-          </h2>
-          <p className="text-base leading-relaxed text-zinc-600">
+          <p className="text-small text-ink-2">Paso 4 de 4</p>
+          <h2 className="text-h3 text-ink">Tu cuenta bancaria</h2>
+          <p className="text-body text-ink-2">
             Registraremos esta cuenta para CoDi. Banxico puede tardar hasta 5 días hábiles en
             activarla.
           </p>
@@ -337,7 +336,7 @@ export function CreateStoryForm() {
               <select
                 value={entity}
                 onChange={(event) => setEntity(event.target.value as "PERSON" | "BUSINESS")}
-                className="h-11 w-full rounded-2xl border border-zinc-200 bg-white px-3 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-[#E4007C]"
+                className="h-11 w-full rounded-md border border-line bg-white px-3 text-small text-ink focus:outline-none"
               >
                 <option value="PERSON">Persona física</option>
                 <option value="BUSINESS">Persona moral</option>
@@ -349,7 +348,7 @@ export function CreateStoryForm() {
             </div>
           </div>
 
-          {error ? <p className="rounded-2xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p> : null}
+          {error ? <p className="rounded-md bg-rose-50 p-3 text-small text-rose-700">{error}</p> : null}
 
           <div className="flex justify-between">
             <Button variant="outline" onClick={() => setStep(3)}>
@@ -370,4 +369,8 @@ export function CreateStoryForm() {
       ) : null}
     </section>
   );
+}
+
+function isAcceptedImagePath(value: string) {
+  return value.startsWith("/") || /^https?:\/\//.test(value);
 }

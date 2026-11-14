@@ -3,30 +3,32 @@
 @tailwind utilities;
 
 :root {
-  --background: #fcfcfd;
-  --foreground: #111827;
-  --muted-foreground: #52525b;
-  --brand-pink: #e4007c;
+  --background: #f7f3ec;
+  --foreground: #1c1a17;
+  --muted-foreground: #4a453f;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-poppins), system-ui, sans-serif;
-  font-size: 16px;
-  line-height: 1.58;
+  font-family: var(--font-instrument-sans), system-ui, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
   text-rendering: optimizeLegibility;
 }
 
 * {
-  border-color: rgb(228 228 231);
+  border-color: #e4ddd2;
+  min-width: 0;
 }
 
 h1,
 h2,
 h3,
 h4 {
-  letter-spacing: -0.02em;
+  font-family: var(--font-fraunces), Georgia, serif;
+  letter-spacing: -0.01em;
 }
 
 p {
@@ -37,9 +39,27 @@ a {
   transition: color 180ms ease;
 }
 
+button,
+input,
+textarea,
+select,
+[role="button"] {
+  min-height: 44px;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid #1c1a17;
+  outline-offset: 2px;
+}
+
 ::selection {
-  background: #ffd2ea;
-  color: #7f0453;
+  background: #f3c4db;
+  color: #1c1a17;
 }
 
 .text-balance {

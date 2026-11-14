@@ -15,7 +15,7 @@ interface StoryPageProps {
 export async function generateMetadata({ params }: StoryPageProps): Promise<Metadata> {
   const { slug } = await params;
   const story = await getStoryBySlugWithStats(slug);
-  if (!story) return {};
+  if (!story) notFound();
   if (story.status !== "aprobada") {
     return {
       title: "Historia en revisión | Échale",
@@ -61,7 +61,7 @@ export default async function StoryPage({ params, searchParams }: StoryPageProps
   const supporters = await listSupportersForStory(story.id);
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd]">
+    <div className="min-h-screen bg-paper pb-[calc(72px+env(safe-area-inset-bottom))] lg:pb-0">
       <SiteHeader />
       <StoryExperience
         initialData={{ story, supporters }}

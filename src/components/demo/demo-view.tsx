@@ -100,135 +100,145 @@ export function DemoView({ baseUrl }: { baseUrl: string }) {
   const adrianQr = useQrData(adrianUrl, 180);
   const santiagoQr = useQrData(santiagoUrl, 180);
 
-  const recent = useMemo(() => data?.recentPayments ?? [], [data]);
+  const recent = useMemo(() => (data?.recentPayments ?? []).slice(0, 5), [data]);
+  const hasExamples = recent.some((item) => item.isExample);
+
+  const numberBlock = (
+    <div>
+      <p className="text-small text-ink-2">Recibido hoy con CoDi</p>
+      <p className="font-display text-[72px] leading-[0.95] text-ink md:text-[96px]">
+        {formatCurrency(data?.totals.amountRaisedTodayReal ?? 0)}
+      </p>
+      <p className="mt-2 text-small text-ink-2">
+        En toda la plataforma: {formatCurrency(data?.totals.amountRaisedPlatformTotal ?? 0)} (incluye ejemplos)
+      </p>
+    </div>
+  );
+
+  const qrBlock = (
+    <div className="space-y-4">
+        <div className="rounded-xl bg-white p-4 shadow-card sm:p-6">
+        <div className="mx-auto grid aspect-square w-full max-w-[420px] place-items-center">
+          {miriamQr ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={miriamQr} alt="QR de Miriam Nava" className="h-full w-full" />
+          ) : (
+            <div className="grid h-full w-full place-items-center bg-[#efe8dc] text-small text-ink-2">Cargando QR...</div>
+          )}
+        </div>
+        <p className="mt-3 break-all text-center text-small text-ink-2">
+          Miriam Nava
+          <br />
+          echale.vercel.app/miriam
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        {[
+          { label: "Adrian Soto", url: adrianUrl, qr: adrianQr },
+          { label: "Santiago Tena", url: santiagoUrl, qr: santiagoQr },
+        ].map((item) => (
+          <div key={item.label} className="rounded-xl bg-white p-4 shadow-card">
+            <div className="grid place-items-center">
+              {item.qr ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={item.qr} alt={`QR de ${item.label}`} className="h-28 w-28" />
+              ) : (
+                <div className="grid h-28 w-28 place-items-center bg-[#efe8dc] text-micro text-ink-2">Cargando</div>
+              )}
+            </div>
+            <p className="mt-2 break-all text-center text-small text-ink-2">
+              {item.label}
+              <br />
+              {item.url.replace(/^https?:\/\//, "")}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const feedBlock = (
+    <div>
+      <h2 className="text-h3 text-ink">Llegando ahora</h2>
+      {recent.length === 0 ? (
+        <p className="mt-3 border-y border-line py-3 text-small text-ink-2">Esperando pagos confirmados...</p>
+      ) : (
+        <ul className="mt-3 divide-y divide-line border-y border-line">
+          {recent.map((item) => {
+            const verb = supportVerbForDisplayName(item.donorName);
+            const keepLong = item.donorName.toLowerCase().includes("prueba en vivo");
+            return (
+              <li key={item.id} className="flex items-start justify-between gap-3 py-3 text-small leading-snug text-ink-2 lg:text-[20px]">
+                <p className="min-w-0">
+                  <span className="font-semibold text-ink">{item.donorName}</span> {verb}{" "}
+                  {keepLong ? "la historia de " : "a "}
+                  <span className="font-semibold text-ink">{item.beneficiaryFirstName}</span>
+                  {" · "}
+                  <span className="font-semibold tabular-nums text-ink">{formatCurrency(item.amount)}</span>
+                  {item.isConfirmed ? (
+                    <span className="mt-1 flex items-center gap-1 text-micro font-semibold uppercase tracking-[0.08em] text-jade">
+                      <CircleDot className="h-3.5 w-3.5" />
+                      Confirmado por CoDi
+                    </span>
+                  ) : null}
+                </p>
+                <span className="shrink-0 whitespace-nowrap text-small text-ink-2">{formatRelative(item.paidAt)}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {hasExamples ? (
+        <p className="mt-3 text-micro text-ink-2/80">Los aportes sin sello son ejemplos del demo.</p>
+      ) : null}
+    </div>
+  );
+
+  const howBlock = (
+    <div className="border-t border-line pt-6">
+      <h2 className="text-h3 text-ink">Cómo está hecho</h2>
+      <ul className="mt-3 space-y-2 text-small text-ink-2">
+        <li>POST /codi/qr crea el cobro y regresa el qrString.</li>
+        <li>El QR se dibuja en el navegador a partir de ese qrString.</li>
+        <li>El webhook codi.qr.payment_received se verifica con Standard Webhooks y actualiza la meta.</li>
+        <li>
+          Código:{" "}
+          <a href="https://github.com/mmcspiritt/echale" className="inline-flex min-h-11 items-center font-semibold text-ink hover:text-rosa" target="_blank" rel="noreferrer">
+            github.com/mmcspiritt/echale
+          </a>
+        </li>
+      </ul>
+    </div>
+  );
 
   return (
-    <section className="relative rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm md:p-8">
+    <section className="relative mx-auto w-full max-w-[1280px] overflow-x-clip px-4 py-8 md:px-10 md:py-10">
       {toast ? (
-        <div className="fixed right-4 top-20 z-50 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg">
+        <div className="fixed right-4 top-6 z-50 rounded-md bg-jade px-4 py-2 text-small font-semibold text-white shadow-card">
           {toast}
         </div>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <article className="space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">
-            Demo para jurado
-          </p>
-          <h1 className="text-balance text-5xl font-black tracking-[-0.03em] text-zinc-900 md:text-6xl">
-            Échale · Demo en vivo
-          </h1>
-          <p className="text-lg leading-relaxed text-zinc-600">
-            Escanea para abrir la historia de Miriam y apoyar al instante con CoDi®.
-          </p>
-
-          <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5">
-            <p className="text-sm text-zinc-600">Recaudado hoy (solo CoDi confirmado)</p>
-            <p className="text-5xl font-black tracking-[-0.03em] text-[#E4007C]">
-              {formatCurrency(data?.totals.amountRaisedTodayReal ?? 0)}
-            </p>
-            <p className="mt-2 text-sm text-zinc-600">
-              Total en la plataforma (incluye ejemplos):{" "}
-              <span className="font-semibold text-zinc-900">
-                {formatCurrency(data?.totals.amountRaisedPlatformTotal ?? 0)}
-              </span>
+      <div className="grid gap-8 lg:grid-cols-2">
+        <article className="order-2 space-y-8 lg:order-1">
+          <div className="space-y-3">
+            <p className="text-micro uppercase tracking-[0.08em] text-terracota">Demo en vivo</p>
+            <h1 className="text-display text-pretty text-ink">Escanea y mira llegar el apoyo</h1>
+            <p className="text-body text-ink-2">
+              Abre la historia de Miriam con tu celular y apoya con CoDi desde tu banco.
             </p>
           </div>
-
-          <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5">
-            <h2 className="text-lg font-semibold text-zinc-900">Integración Pey (resumen técnico)</h2>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-zinc-600">
-              <li>POST /codi/qr para crear cobro y obtener qrString.</li>
-              <li>qrString se renderiza como QR en cliente para pago CoDi.</li>
-              <li>Webhook codi.qr.payment_received verificado con Standard Webhooks.</li>
-            </ul>
-            <a
-              href="https://github.com/mmcspiritt/echale"
-              target="_blank"
-              rel="noreferrer"
-              className="mt-3 inline-flex text-sm font-semibold text-[#E4007C] hover:underline"
-            >
-              Ver repo público en GitHub
-            </a>
-          </div>
+          <div className="hidden lg:block">{numberBlock}</div>
+          <div className="hidden lg:block">{howBlock}</div>
         </article>
-
-        <article className="space-y-4">
-          <div className="rounded-3xl border border-zinc-200 p-4">
-            <p className="mb-2 text-center text-sm font-medium text-zinc-600">Miriam · QR principal</p>
-            <div className="grid place-items-center rounded-2xl bg-white p-3">
-              {miriamQr ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={miriamQr} alt="QR principal de Miriam" className="h-[320px] w-[320px] md:h-[390px] md:w-[390px]" />
-              ) : (
-                <div className="grid h-[320px] w-[320px] place-items-center rounded-2xl bg-zinc-100 text-sm text-zinc-500">
-                  Cargando QR...
-                </div>
-              )}
-            </div>
-            <p className="mt-2 text-center text-xs text-zinc-500">{miriamUrl}</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "Adrian", url: adrianUrl, qr: adrianQr },
-              { label: "Santiago", url: santiagoUrl, qr: santiagoQr },
-            ].map((item) => (
-              <div key={item.label} className="rounded-2xl border border-zinc-200 p-3">
-                <p className="mb-1 text-center text-sm font-medium text-zinc-700">{item.label}</p>
-                <div className="grid place-items-center">
-                  {item.qr ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.qr} alt={`QR de ${item.label}`} className="h-[128px] w-[128px]" />
-                  ) : (
-                    <div className="grid h-[128px] w-[128px] place-items-center rounded-xl bg-zinc-100 text-xs text-zinc-500">
-                      Cargando
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </article>
+        <article className="order-1 space-y-8 lg:order-2">{qrBlock}</article>
       </div>
-
-      <div className="mt-6 rounded-3xl border border-zinc-200 bg-zinc-50 p-4">
-        <h3 className="text-lg font-semibold text-zinc-900">Feed en vivo</h3>
-        <div className="mt-3 space-y-2">
-          {recent.length === 0 ? (
-            <p className="rounded-2xl bg-white p-3 text-sm text-zinc-500">
-              Esperando pagos confirmados...
-            </p>
-          ) : (
-            recent.map((item) => (
-              <article
-                key={item.id}
-                className="rounded-2xl bg-white px-4 py-3 text-sm"
-              >
-                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4">
-                  <p className="min-w-0 break-words text-zinc-700 md:flex-1">
-                    {item.donorName} {supportVerbForDisplayName(item.donorName)} la historia de{" "}
-                    <span className="font-semibold">{item.beneficiaryFirstName}</span> con{" "}
-                    <span className="font-semibold text-zinc-900">{formatCurrency(item.amount)}</span>{" "}
-                    <span className="whitespace-nowrap">· {formatRelative(item.paidAt)}</span>
-                  </p>
-                  {item.isConfirmed ? (
-                    <p className="inline-flex w-fit items-center gap-1 whitespace-nowrap rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                      <CircleDot className="h-3.5 w-3.5 animate-pulse" />
-                      Confirmado por CoDi
-                    </p>
-                  ) : (
-                    <p className="inline-flex w-fit items-center gap-1 whitespace-nowrap rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600">
-                      <CircleDot className="h-3.5 w-3.5" />
-                      Aporte de ejemplo
-                    </p>
-                  )}
-                </div>
-              </article>
-            ))
-          )}
-        </div>
+      <div className="mt-8 space-y-8 lg:hidden">
+        {numberBlock}
+        {feedBlock}
+        {howBlock}
       </div>
+      <div className="mt-10 hidden lg:block">{feedBlock}</div>
     </section>
   );
 }

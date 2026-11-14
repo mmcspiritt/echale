@@ -8,9 +8,9 @@ export function Progress({
   className?: string;
 }) {
   return (
-    <div className={cn("h-2 w-full overflow-hidden rounded-full bg-zinc-100", className)}>
+    <div className={cn("h-2 w-full overflow-hidden rounded-full bg-line", className)}>
       <div
-        className="h-full rounded-full bg-gradient-to-r from-[#E4007C] to-[#FF5FA2] transition-all duration-500"
+        className="h-full rounded-full bg-rosa transition-all duration-500"
         style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
       />
     </div>

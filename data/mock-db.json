@@ -14,11 +14,11 @@
       "clabeMasked": "0121••••••••2429",
       "peyKeyEnv": "PEY_API_KEY_MIRIAM",
       "goalAmount": 50000,
-      "coverImage": "/images/lupita-oaxaca.jpg",
+      "coverImage": "/stories/miriam/miriam-cover-4x5.webp",
       "galleryImages": [
-        "/images/lupita-oaxaca.jpg",
-        "/images/lupita-oaxaca.jpg",
-        "/images/lupita-oaxaca.jpg"
+        "/stories/miriam/miriam-cover-4x5.webp",
+        "/stories/miriam/miriam-gallery-1-1x1.webp",
+        "/stories/miriam/miriam-gallery-2-3x2.webp"
       ],
       "milestones": [
         {
@@ -60,11 +60,11 @@
       "clabeMasked": "0121••••••••6252",
       "peyKeyEnv": "PEY_API_KEY_SANTIAGO",
       "goalAmount": 50000,
-      "coverImage": "/images/javier-hospital.jpg",
+      "coverImage": "/stories/santiago/santiago-cover-4x5.webp",
       "galleryImages": [
-        "/images/javier-hospital.jpg",
-        "/images/javier-hospital.jpg",
-        "/images/javier-hospital.jpg"
+        "/stories/santiago/santiago-cover-4x5.webp",
+        "/stories/santiago/santiago-gallery-1-1x1.webp",
+        "/stories/santiago/santiago-gallery-2-3x2.webp"
       ],
       "milestones": [
         {
@@ -101,10 +101,11 @@
       "clabeMasked": "0141••••••••6217",
       "peyKeyEnv": "PEY_API_KEY_ADRIAN",
       "goalAmount": 900,
-      "coverImage": "/images/ramiro-terminal.jpg",
+      "coverImage": "/stories/adrian/adrian-cover-4x5.webp",
       "galleryImages": [
-        "/images/ramiro-terminal.jpg",
-        "/images/ramiro-terminal.jpg"
+        "/stories/adrian/adrian-cover-4x5.webp",
+        "/stories/adrian/adrian-gallery-1-1x1.webp",
+        "/stories/adrian/adrian-gallery-2-3x2.webp"
       ],
       "milestones": [
         {
@@ -114,7 +115,7 @@
         },
         {
           "id": "m2-adrian",
-          "label": "Comida en trayecto",
+          "label": "Comida para el camino",
           "targetAmount": 900
         }
       ],

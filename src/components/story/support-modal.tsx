@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import confetti from "canvas-confetti";
-import { CheckCircle2, Loader2, Phone, X } from "lucide-react";
+import { CheckCircle2, ChevronDown, Loader2, X } from "lucide-react";
 import QRCode from "qrcode";
 
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,7 @@ export function SupportModal({
   const [error, setError] = useState<string | null>(null);
   const [checkout, setCheckout] = useState<CheckoutState | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "pending" | "paid">("idle");
   const [statusSnapshot, setStatusSnapshot] = useState<PaymentStatusSnapshot | null>(null);
 
@@ -146,6 +147,21 @@ export function SupportModal({
     }
   }
 
+  async function saveQrToPhotos() {
+    if (!qrDataUrl || !checkout) return;
+    const filename = `echale-${slug}-${checkout.codiQrId}.png`;
+    const blob = await fetch(qrDataUrl).then((response) => response.blob());
+    const file = new File([blob], filename, { type: "image/png" });
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: "QR para apoyar con CoDi" });
+      return;
+    }
+    const link = document.createElement("a");
+    link.href = qrDataUrl;
+    link.download = filename;
+    link.click();
+  }
+
   async function simulatePayment() {
     if (!checkout) return;
     await fetch(`/api/payments/${checkout.paymentId}/simulate`, {
@@ -176,13 +192,13 @@ export function SupportModal({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.fillStyle = "#fff8fc";
+    ctx.fillStyle = "#f7f3ec";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#111827";
-    ctx.font = "700 54px Poppins, sans-serif";
+    ctx.fillStyle = "#1C1A17";
+    ctx.font = "700 54px Fraunces, Georgia, serif";
     ctx.fillText("Comprobante de apoyo", 64, 110);
-    ctx.fillStyle = "#E4007C";
-    ctx.font = "800 68px Poppins, sans-serif";
+    ctx.fillStyle = "#C8006A";
+    ctx.font = "700 68px Fraunces, Georgia, serif";
     ctx.fillText(formatCurrency(resolvedAmount), 64, 205);
 
     const rows = [
@@ -194,7 +210,7 @@ export function SupportModal({
       ["Gestionado por", organizationName],
     ];
 
-    ctx.font = "600 28px Poppins, sans-serif";
+    ctx.font = "600 28px Instrument Sans, Arial, sans-serif";
     rows.forEach(([label, value], index) => {
       const y = 280 + index * 58;
       ctx.fillStyle = "#6B7280";
@@ -203,8 +219,8 @@ export function SupportModal({
       ctx.fillText(value, 360, y);
     });
 
-    ctx.fillStyle = "#6B7280";
-    ctx.font = "500 24px Poppins, sans-serif";
+    ctx.fillStyle = "#4A453F";
+    ctx.font = "500 24px Instrument Sans, Arial, sans-serif";
     ctx.fillText("Échale · Confirmado por CoDi vía Pey", 64, 635);
 
     const link = document.createElement("a");
@@ -214,20 +230,20 @@ export function SupportModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/45 p-0 backdrop-blur-[2px] md:items-center md:p-8">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-0 md:items-center md:p-8">
       <div
         data-testid="support-modal-panel"
-        className="max-h-[95vh] w-full overflow-auto rounded-t-3xl bg-white p-5 shadow-2xl md:max-w-xl md:rounded-3xl md:p-7"
+        className="h-auto max-h-[92dvh] w-full overflow-auto rounded-t-xl border border-line bg-paper p-5 shadow-card md:max-h-[90vh] md:max-w-xl md:rounded-xl md:p-7"
       >
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h3 className="text-2xl font-semibold tracking-[-0.02em] text-zinc-900">
+            <h3 className="text-h2 text-ink">
               Apoyar a {personName}
             </h3>
-            <p className="mt-0.5 text-sm text-zinc-500">Pago seguro con CoDi® vía Pey</p>
+            <p className="mt-0.5 text-small text-ink-2">Pagas con CoDi desde tu banco · sin comisión</p>
           </div>
           <button
-            className="rounded-full p-2 text-zinc-500 transition hover:bg-zinc-100"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-ink-2 transition hover:bg-black/5"
             onClick={onClose}
             aria-label="Cerrar"
           >
@@ -236,12 +252,12 @@ export function SupportModal({
         </div>
 
         {!checkout ? (
-          <div className="space-y-4">
-            <p className="text-base leading-relaxed text-zinc-600">
-              Elige un monto, agrega un mensaje si quieres y generamos tu cobro CoDi al instante.
+          <div className="space-y-4 pb-20">
+            <p className="text-body text-ink-2">
+              Elige cuánto quieres dar. Te mostramos un QR para pagar desde tu app bancaria.
             </p>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {amountOptions.map((option) => (
                 <button
                   key={option}
@@ -249,10 +265,10 @@ export function SupportModal({
                     setAmount(option);
                     setCustomAmount("");
                   }}
-                  className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
+                  className={`min-h-11 rounded-md border px-3 py-2 text-center text-small font-semibold transition ${
                     amount === option && customAmount.length === 0
-                      ? "border-[#E4007C] bg-[#fff0f8] text-[#E4007C]"
-                      : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300"
+                      ? "border-ink bg-ink text-white"
+                      : "border-line bg-white text-ink-2 hover:border-ink-2/40"
                   }`}
                 >
                   {formatCurrency(option)}
@@ -261,7 +277,7 @@ export function SupportModal({
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-700">Otro monto</label>
+              <label className="text-small font-medium text-ink">Otro monto</label>
               <Input
                 inputMode="decimal"
                 placeholder="Ej. 350"
@@ -270,67 +286,80 @@ export function SupportModal({
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-700">Tu nombre (opcional)</label>
-              <Input
-                placeholder="Como quieras que aparezca"
-                value={donorName}
-                onChange={(event) => setDonorName(event.target.value)}
-                maxLength={80}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-700">Mensaje (opcional)</label>
-              <Textarea
-                placeholder="Un mensaje de ánimo siempre ayuda 💗"
-                value={message}
-                onChange={(event) => setMessage(event.target.value)}
-                maxLength={180}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-700">
-                Teléfono 10 dígitos (opcional para push CoDi)
-              </label>
-              <Input
-                placeholder="5512345678"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value.replace(/[^\d]/g, "").slice(0, 10))}
-                maxLength={10}
-              />
-            </div>
+            <details
+              className="border-t border-line"
+              onToggle={(event) => setDetailsOpen((event.currentTarget as HTMLDetailsElement).open)}
+            >
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between text-small font-medium text-ink">
+                Agregar nombre y mensaje
+                <ChevronDown className={`h-4 w-4 transition ${detailsOpen ? "rotate-180" : ""}`} />
+              </summary>
+              <div className="mt-3 space-y-3">
+                <div className="space-y-2">
+                  <label className="text-small font-medium text-ink">Tu nombre (opcional)</label>
+                  <Input
+                    placeholder="Como quieras aparecer"
+                    value={donorName}
+                    onChange={(event) => setDonorName(event.target.value)}
+                    maxLength={80}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-small font-medium text-ink">Mensaje (opcional)</label>
+                  <Textarea
+                    placeholder={`Buen viaje, ${personName.split(" ")[0]}`}
+                    value={message}
+                    onChange={(event) => setMessage(event.target.value)}
+                    maxLength={180}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-small font-medium text-ink">
+                    Recibir la solicitud en mi celular (opcional)
+                  </label>
+                  <Input
+                    placeholder="5512345678"
+                    value={phone}
+                    onChange={(event) =>
+                      setPhone(event.target.value.replace(/[^\d]/g, "").slice(0, 10))
+                    }
+                    maxLength={10}
+                  />
+                </div>
+              </div>
+            </details>
 
             {error ? (
-              <p className="rounded-2xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>
+              <p className="rounded-md bg-rose-50 p-3 text-small text-rose-700">{error}</p>
             ) : null}
 
-            <Button className="w-full" size="lg" onClick={submitSupport} disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generando cobro...
-                </>
-              ) : (
-                <>Apoyar con CoDi · {formatCurrency(resolvedAmount)}</>
-              )}
-            </Button>
+            <div className="sticky bottom-0 -mx-5 mt-4 border-t border-line bg-paper px-5 pb-[max(16px,env(safe-area-inset-bottom))] pt-3">
+              <Button className="w-full" size="lg" onClick={submitSupport} disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generando cobro...
+                  </>
+                ) : (
+                  <>Apoyar con CoDi · {formatCurrency(resolvedAmount)}</>
+                )}
+              </Button>
+            </div>
           </div>
         ) : status === "paid" ? (
           <div className="space-y-5 text-center">
-            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-emerald-100 shadow-[0_0_0_14px_rgba(16,185,129,0.12)]">
+            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-emerald-100">
               <CheckCircle2 className="h-10 w-10 text-emerald-600" />
             </div>
-            <h4 className="text-3xl font-black text-zinc-900">¡Gracias por echar la mano!</h4>
-            <p className="text-zinc-600">
+            <h4 className="text-h2 text-ink">¡Gracias por echar la mano!</h4>
+            <p className="text-small text-ink-2">
               Tu apoyo ya se registró y la meta se actualizó en tiempo real.
             </p>
-            <p className="rounded-2xl bg-[#fff0f8] px-4 py-3 text-lg font-semibold text-[#E4007C]">
+            <p className="rounded-md bg-white px-4 py-3 text-body font-semibold text-rosa shadow-card">
               Aporte confirmado: {formatCurrency(resolvedAmount)}
             </p>
-            <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-left text-sm text-zinc-700">
-              <p className="mb-2 text-sm font-semibold text-zinc-900">Comprobante</p>
+            <div className="rounded-md border border-line bg-white p-4 text-left text-small text-ink-2 shadow-card">
+              <p className="mb-2 text-small font-semibold text-ink">Comprobante</p>
               <div className="space-y-1">
                 <p>
                   <span className="font-medium">Monto:</span> {formatCurrency(resolvedAmount)}
@@ -366,35 +395,52 @@ export function SupportModal({
           </div>
         ) : (
           <div className="space-y-5">
-            <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4">
-              <div className="mb-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3">
-                <p className="text-sm text-zinc-600">Monto elegido</p>
-                <p className="text-2xl font-black text-[#E4007C]">{formatCurrency(resolvedAmount)}</p>
-              </div>
-              <p className="text-sm text-zinc-600">
-                1) Abre tu app bancaria 2) Escanea este QR CoDi 3) Confirma tu pago.
+            <div>
+              <p className="text-small text-ink-2">
+                Vas a apoyar con{" "}
+                <strong className="font-display text-2xl tabular-nums text-rosa">
+                  {formatCurrency(resolvedAmount)}
+                </strong>
               </p>
-              <div className="relative mt-4 flex justify-center">
-                <span className="absolute mt-5 h-56 w-56 animate-ping rounded-2xl bg-[#E4007C]/8" />
+              <ol className="mt-3 space-y-2 text-[15px] leading-relaxed text-ink-2">
+                <li>
+                  <span className="mr-2 font-semibold text-rosa">1.</span>Abre tu app bancaria.
+                </li>
+                <li>
+                  <span className="mr-2 font-semibold text-rosa">2.</span>Escanea este QR CoDi.
+                </li>
+                <li>
+                  <span className="mr-2 font-semibold text-rosa">3.</span>Confirma tu pago.
+                </li>
+              </ol>
+              <div className="mt-4 flex justify-center">
                 {qrDataUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={qrDataUrl}
                     alt="Código QR CoDi"
-                    className="relative h-56 w-56 rounded-2xl border border-zinc-200 bg-white p-3 shadow-lg"
+                    className="h-60 w-60 rounded-md bg-white p-4"
                   />
                 ) : (
-                  <div className="grid h-56 w-56 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-400">
+                  <div className="grid h-60 w-60 place-items-center rounded-md bg-[#efe8dc] text-ink-2">
                     Cargando QR...
                   </div>
                 )}
               </div>
-              <p className="mt-3 text-center text-xs text-zinc-500">
-                Referencia #{checkout.codiQrId} · Esperando confirmación...
+              <div className="mt-4 hidden [@media(pointer:coarse)]:block">
+                <Button variant="outline" className="h-12 w-full" onClick={saveQrToPhotos}>
+                  Guardar QR en mis fotos
+                </Button>
+                <p className="mt-2 text-small text-ink-2">
+                  Luego ábrelo en tu app bancaria: CoDi → Pagar con QR → elegir de la galería.
+                </p>
+              </div>
+              <p className="mt-3 text-center font-mono text-small text-ink-2">
+                Referencia {checkout.codiQrId}
               </p>
-              <p className="mt-2 inline-flex items-center gap-2 rounded-full bg-[#fff0f8] px-3 py-1 text-xs font-medium text-[#a5005a]">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Estado: esperando pago
+              <p className="mt-2 inline-flex items-center gap-2 text-small text-ink-2">
+                <Loader2 className="h-4 w-4 animate-spin text-rosa" />
+                Esperando tu pago…
               </p>
             </div>
 
@@ -403,22 +449,11 @@ export function SupportModal({
                 href={checkout.paymentLink}
                 target="_blank"
                 rel="noreferrer"
-                className="block rounded-2xl border border-zinc-200 bg-white p-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                className="block rounded-md border border-line bg-white p-3 text-small font-medium text-ink hover:bg-black/5"
               >
                 Abrir en app bancaria
               </a>
-            ) : (
-              <p className="text-xs text-zinc-500">
-                Si tu banco lo permite, también puedes completar desde el enlace de pago.
-              </p>
-            )}
-
-            <div className="rounded-2xl border border-zinc-200 p-3 text-sm text-zinc-600">
-              <p className="font-medium text-zinc-800">¿Prefieres push a tu celular?</p>
-              <p className="mt-1 inline-flex items-center gap-1">
-                <Phone className="h-4 w-4" /> Si pusiste número, enviamos la solicitud automáticamente.
-              </p>
-            </div>
+            ) : null}
 
             {checkout.mode === "mock" ? (
               <Button variant="secondary" className="w-full" onClick={simulatePayment}>
@@ -427,7 +462,7 @@ export function SupportModal({
             ) : null}
 
             <Button variant="ghost" className="w-full" onClick={onClose}>
-              Cerrar por ahora
+              Cerrar
             </Button>
           </div>
         )}

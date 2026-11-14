@@ -318,11 +318,16 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm text-zinc-600">URL portada</label>
-              <Input name="coverImage" defaultValue={initialStory.coverImage} required />
+              <label className="text-sm text-zinc-600">Portada (ruta /stories/... o URL http)</label>
+              <Input
+                name="coverImage"
+                defaultValue={initialStory.coverImage}
+                placeholder="/stories/miriam/miriam-cover-4x5.webp"
+                required
+              />
             </div>
             <div className="space-y-1">
-              <label className="text-sm text-zinc-600">Galería (1 URL por línea)</label>
+              <label className="text-sm text-zinc-600">Galería (una ruta o URL por línea)</label>
               <Textarea
                 name="galleryImages"
                 defaultValue={initialStory.galleryImages.join("\n")}
