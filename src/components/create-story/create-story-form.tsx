@@ -121,13 +121,15 @@ export function CreateStoryForm() {
 
   if (success) {
     return (
-      <section className="rounded-3xl border border-emerald-200 bg-white p-6 shadow-sm md:p-8">
+      <section className="rounded-3xl border border-emerald-200 bg-white p-6 shadow-[0_14px_34px_rgba(15,23,42,0.07)] md:p-8">
         <div className="mx-auto max-w-2xl space-y-4 text-center">
           <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-100">
             <CheckCircle2 className="h-9 w-9 text-emerald-600" />
           </div>
-          <h2 className="text-3xl font-black text-zinc-900">¡Tu página ya está en revisión!</h2>
-          <p className="text-zinc-600">
+          <h2 className="text-3xl font-black tracking-[-0.02em] text-zinc-900">
+            ¡Tu página ya está en revisión!
+          </h2>
+          <p className="text-base leading-relaxed text-zinc-600">
             Nuestro equipo aliado revisará la solicitud. Te avisaremos por correo cuando quede
             aprobada.
           </p>
@@ -154,7 +156,7 @@ export function CreateStoryForm() {
   }
 
   return (
-    <section className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm md:p-8">
+    <section className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)] md:p-8">
       <div className="mb-6 grid grid-cols-4 gap-2">
         {[1, 2, 3, 4].map((index) => (
           <div
@@ -168,7 +170,10 @@ export function CreateStoryForm() {
 
       {step === 1 ? (
         <div className="space-y-4">
-          <h2 className="text-2xl font-black text-zinc-900">1) ¿Quién necesita apoyo?</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">Paso 1 de 4</p>
+          <h2 className="text-2xl font-black tracking-[-0.02em] text-zinc-900">
+            ¿Quién necesita apoyo?
+          </h2>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
               <label className="text-sm text-zinc-600">Nombre de la persona</label>
@@ -200,7 +205,8 @@ export function CreateStoryForm() {
 
       {step === 2 ? (
         <div className="space-y-4">
-          <h2 className="text-2xl font-black text-zinc-900">2) Cuenta tu historia</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">Paso 2 de 4</p>
+          <h2 className="text-2xl font-black tracking-[-0.02em] text-zinc-900">Cuenta tu historia</h2>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
               <label className="text-sm text-zinc-600">Ciudad</label>
@@ -247,7 +253,8 @@ export function CreateStoryForm() {
 
       {step === 3 ? (
         <div className="space-y-4">
-          <h2 className="text-2xl font-black text-zinc-900">3) Foto y metas</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">Paso 3 de 4</p>
+          <h2 className="text-2xl font-black tracking-[-0.02em] text-zinc-900">Foto y metas</h2>
           <div className="space-y-2">
             <p className="text-sm text-zinc-600">Elige una foto de ejemplo para tu página</p>
             <div className="grid gap-2 md:grid-cols-3">
@@ -306,8 +313,11 @@ export function CreateStoryForm() {
 
       {step === 4 ? (
         <div className="space-y-4">
-          <h2 className="text-2xl font-black text-zinc-900">4) Cuenta bancaria en Pey</h2>
-          <p className="text-sm text-zinc-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">Paso 4 de 4</p>
+          <h2 className="text-2xl font-black tracking-[-0.02em] text-zinc-900">
+            Cuenta bancaria en Pey
+          </h2>
+          <p className="text-base leading-relaxed text-zinc-600">
             Registraremos esta cuenta para CoDi. Banxico puede tardar hasta 5 días hábiles en
             activarla.
           </p>

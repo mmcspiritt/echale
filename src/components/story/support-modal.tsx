@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import confetti from "canvas-confetti";
-import { Loader2, Phone, Sparkles, X } from "lucide-react";
+import { CheckCircle2, Loader2, Phone, X } from "lucide-react";
 import QRCode from "qrcode";
 
 import { Button } from "@/components/ui/button";
@@ -21,15 +21,26 @@ interface CheckoutState {
   mode: "mock" | "live";
 }
 
+interface PaymentStatusSnapshot {
+  status: string;
+  paidAt: string | null;
+  providerTransactionId: string | null;
+  codiQrId: string | null;
+}
+
 export function SupportModal({
   slug,
   personName,
+  storyTitle,
+  organizationName,
   initialAmount,
   onClose,
   onPaid,
 }: {
   slug: string;
   personName: string;
+  storyTitle: string;
+  organizationName: string;
   initialAmount: number;
   onClose: () => void;
   onPaid: () => void;
@@ -44,6 +55,7 @@ export function SupportModal({
   const [checkout, setCheckout] = useState<CheckoutState | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "pending" | "paid">("idle");
+  const [statusSnapshot, setStatusSnapshot] = useState<PaymentStatusSnapshot | null>(null);
 
   const resolvedAmount = useMemo(() => {
     if (customAmount.trim().length > 0) {
@@ -75,7 +87,8 @@ export function SupportModal({
         cache: "no-store",
       });
       if (!response.ok) return;
-      const data = (await response.json()) as { status: string };
+      const data = (await response.json()) as PaymentStatusSnapshot;
+      setStatusSnapshot(data);
       if (data.status === "paid") {
         setStatus("paid");
         confetti({
@@ -140,14 +153,79 @@ export function SupportModal({
     });
   }
 
+  function shortId(value: string | null | undefined) {
+    if (!value) return "—";
+    if (value.length <= 12) return value;
+    return `${value.slice(0, 6)}…${value.slice(-4)}`;
+  }
+
+  function mexicoDateTime(value: string | null | undefined) {
+    if (!value) return "Pendiente";
+    return new Intl.DateTimeFormat("es-MX", {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: "America/Mexico_City",
+    }).format(new Date(value));
+  }
+
+  function downloadReceiptPng() {
+    if (!checkout) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = 1200;
+    canvas.height = 675;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.fillStyle = "#fff8fc";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#111827";
+    ctx.font = "700 54px Poppins, sans-serif";
+    ctx.fillText("Comprobante de apoyo", 64, 110);
+    ctx.fillStyle = "#E4007C";
+    ctx.font = "800 68px Poppins, sans-serif";
+    ctx.fillText(formatCurrency(resolvedAmount), 64, 205);
+
+    const rows = [
+      ["Historia", storyTitle],
+      ["Beneficiario", personName],
+      ["Fecha (CDMX)", mexicoDateTime(statusSnapshot?.paidAt)],
+      ["Pey transactionId", shortId(statusSnapshot?.providerTransactionId)],
+      ["CoDi QR ID", shortId(statusSnapshot?.codiQrId ?? checkout.codiQrId)],
+      ["Gestionado por", organizationName],
+    ];
+
+    ctx.font = "600 28px Poppins, sans-serif";
+    rows.forEach(([label, value], index) => {
+      const y = 280 + index * 58;
+      ctx.fillStyle = "#6B7280";
+      ctx.fillText(`${label}:`, 64, y);
+      ctx.fillStyle = "#111827";
+      ctx.fillText(value, 360, y);
+    });
+
+    ctx.fillStyle = "#6B7280";
+    ctx.font = "500 24px Poppins, sans-serif";
+    ctx.fillText("Échale · Confirmado por CoDi vía Pey", 64, 635);
+
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = `comprobante-${slug}-${Date.now()}.png`;
+    link.click();
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/40 p-0 backdrop-blur-[2px] md:items-center md:p-8">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/45 p-0 backdrop-blur-[2px] md:items-center md:p-8">
       <div
         data-testid="support-modal-panel"
         className="max-h-[95vh] w-full overflow-auto rounded-t-3xl bg-white p-5 shadow-2xl md:max-w-xl md:rounded-3xl md:p-7"
       >
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-2xl font-semibold text-zinc-900">Apoyar a {personName}</h3>
+          <div>
+            <h3 className="text-2xl font-semibold tracking-[-0.02em] text-zinc-900">
+              Apoyar a {personName}
+            </h3>
+            <p className="mt-0.5 text-sm text-zinc-500">Pago seguro con CoDi® vía Pey</p>
+          </div>
           <button
             className="rounded-full p-2 text-zinc-500 transition hover:bg-zinc-100"
             onClick={onClose}
@@ -159,7 +237,7 @@ export function SupportModal({
 
         {!checkout ? (
           <div className="space-y-4">
-            <p className="text-sm text-zinc-600">
+            <p className="text-base leading-relaxed text-zinc-600">
               Elige un monto, agrega un mensaje si quieres y generamos tu cobro CoDi al instante.
             </p>
 
@@ -241,8 +319,8 @@ export function SupportModal({
           </div>
         ) : status === "paid" ? (
           <div className="space-y-5 text-center">
-            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-emerald-100 shadow-[0_0_0_10px_rgba(16,185,129,0.12)]">
-              <Sparkles className="h-10 w-10 text-emerald-600" />
+            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-emerald-100 shadow-[0_0_0_14px_rgba(16,185,129,0.12)]">
+              <CheckCircle2 className="h-10 w-10 text-emerald-600" />
             </div>
             <h4 className="text-3xl font-black text-zinc-900">¡Gracias por echar la mano!</h4>
             <p className="text-zinc-600">
@@ -251,9 +329,40 @@ export function SupportModal({
             <p className="rounded-2xl bg-[#fff0f8] px-4 py-3 text-lg font-semibold text-[#E4007C]">
               Aporte confirmado: {formatCurrency(resolvedAmount)}
             </p>
-            <Button className="w-full" onClick={onClose}>
-              Cerrar
-            </Button>
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-left text-sm text-zinc-700">
+              <p className="mb-2 text-sm font-semibold text-zinc-900">Comprobante</p>
+              <div className="space-y-1">
+                <p>
+                  <span className="font-medium">Monto:</span> {formatCurrency(resolvedAmount)}
+                </p>
+                <p>
+                  <span className="font-medium">Historia:</span> {storyTitle}
+                </p>
+                <p>
+                  <span className="font-medium">Fecha (CDMX):</span>{" "}
+                  {mexicoDateTime(statusSnapshot?.paidAt)}
+                </p>
+                <p>
+                  <span className="font-medium">Pey transactionId:</span>{" "}
+                  {shortId(statusSnapshot?.providerTransactionId)}
+                </p>
+                <p>
+                  <span className="font-medium">CoDi QR ID:</span>{" "}
+                  {shortId(statusSnapshot?.codiQrId ?? checkout?.codiQrId)}
+                </p>
+                <p>
+                  <span className="font-medium">Gestionado por:</span> {organizationName}
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Button variant="outline" className="w-full" onClick={downloadReceiptPng}>
+                Descargar comprobante
+              </Button>
+              <Button className="w-full" onClick={onClose}>
+                Cerrar
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="space-y-5">
@@ -263,10 +372,10 @@ export function SupportModal({
                 <p className="text-2xl font-black text-[#E4007C]">{formatCurrency(resolvedAmount)}</p>
               </div>
               <p className="text-sm text-zinc-600">
-                Escanea el código con tu app bancaria para completar el apoyo:
+                1) Abre tu app bancaria 2) Escanea este QR CoDi 3) Confirma tu pago.
               </p>
               <div className="relative mt-4 flex justify-center">
-                <span className="absolute mt-5 h-56 w-56 animate-ping rounded-2xl bg-[#E4007C]/6" />
+                <span className="absolute mt-5 h-56 w-56 animate-ping rounded-2xl bg-[#E4007C]/8" />
                 {qrDataUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -283,10 +392,10 @@ export function SupportModal({
               <p className="mt-3 text-center text-xs text-zinc-500">
                 Referencia #{checkout.codiQrId} · Esperando confirmación...
               </p>
-              <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#fff0f8] px-3 py-1 text-xs font-medium text-[#a5005a]">
+              <p className="mt-2 inline-flex items-center gap-2 rounded-full bg-[#fff0f8] px-3 py-1 text-xs font-medium text-[#a5005a]">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Esperando confirmación de tu banco
-              </div>
+                Estado: esperando pago
+              </p>
             </div>
 
             {checkout.paymentLink ? (
@@ -294,11 +403,15 @@ export function SupportModal({
                 href={checkout.paymentLink}
                 target="_blank"
                 rel="noreferrer"
-                className="block rounded-2xl border border-zinc-200 p-3 text-sm text-zinc-700 hover:bg-zinc-50"
+                className="block rounded-2xl border border-zinc-200 bg-white p-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
               >
-                Abrir liga de pago
+                Abrir en app bancaria
               </a>
-            ) : null}
+            ) : (
+              <p className="text-xs text-zinc-500">
+                Si tu banco lo permite, también puedes completar desde el enlace de pago.
+              </p>
+            )}
 
             <div className="rounded-2xl border border-zinc-200 p-3 text-sm text-zinc-600">
               <p className="font-medium text-zinc-800">¿Prefieres push a tu celular?</p>

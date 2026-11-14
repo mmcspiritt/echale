@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getPaymentById } from "@/lib/store";
+import { getPaymentById, getStoryById } from "@/lib/store";
 
 export const runtime = "nodejs";
 
@@ -13,10 +13,15 @@ export async function GET(
   if (!payment) {
     return NextResponse.json({ error: "Pago no encontrado" }, { status: 404 });
   }
+  const story = await getStoryById(payment.storyId);
 
   return NextResponse.json({
     id: payment.id,
     status: payment.status,
     paidAt: payment.paidAt,
+    providerTransactionId: payment.providerTransactionId,
+    codiQrId: payment.providerChargeId,
+    storyTitle: story?.title ?? null,
+    organizationName: story?.organizationName ?? null,
   });
 }

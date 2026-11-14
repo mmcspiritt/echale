@@ -4,17 +4,37 @@
 
 :root {
   --background: #fcfcfd;
-  --foreground: #0f172a;
+  --foreground: #111827;
+  --muted-foreground: #52525b;
+  --brand-pink: #e4007c;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-poppins), system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.58;
+  text-rendering: optimizeLegibility;
 }
 
 * {
   border-color: rgb(228 228 231);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: -0.02em;
+}
+
+p {
+  max-width: 70ch;
+}
+
+a {
+  transition: color 180ms ease;
 }
 
 ::selection {
@@ -24,4 +44,15 @@ body {
 
 .text-balance {
   text-wrap: balance;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

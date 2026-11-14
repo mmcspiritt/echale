@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
+import { getPublicBaseUrl } from "@/lib/site-url";
 import { StoryExperience } from "@/components/story/story-experience";
 import { getStoryBySlugWithStats, listSupportersForStory, seedDemoStories } from "@/lib/store";
 
@@ -61,7 +63,12 @@ export default async function StoryPage({ params, searchParams }: StoryPageProps
   return (
     <div className="min-h-screen bg-[#fcfcfd]">
       <SiteHeader />
-      <StoryExperience initialData={{ story, supporters }} previewToken={previewToken} />
+      <StoryExperience
+        initialData={{ story, supporters }}
+        previewToken={previewToken}
+        publicBaseUrl={getPublicBaseUrl()}
+      />
+      <SiteFooter />
     </div>
   );
 }

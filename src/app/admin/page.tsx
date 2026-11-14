@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { categories } from "@/lib/categories";
 import { requireAdminAuth } from "@/lib/admin-auth";
+import { SiteFooter } from "@/components/site/footer";
 import {
   getStoryById,
   listPaymentsWithStory,
@@ -67,7 +68,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   };
 
   return (
-    <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 md:px-8">
+    <>
+      <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 md:px-8">
       <header className="rounded-3xl border border-zinc-200 bg-white p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -270,7 +272,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 <Input name="peyTaxId" defaultValue={initialStory.peyTaxId ?? ""} />
               </div>
               <div className="space-y-1">
-                <label className="text-sm text-zinc-600">bankAccountId Pey</label>
+                <label className="text-sm text-zinc-600">ID de cuenta Pey</label>
                 <Input name="bankAccountId" defaultValue={initialStory.bankAccountId ?? ""} />
               </div>
               <div className="space-y-1">
@@ -415,6 +417,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </table>
         </div>
       </section>
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

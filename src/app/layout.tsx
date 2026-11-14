@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Nunito, Poppins } from "next/font/google";
+import { getPublicBaseUrl } from "@/lib/site-url";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -15,7 +16,7 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://echale.mx"),
+  metadataBase: new URL(getPublicBaseUrl()),
   title: "Échale | Historias con metas reales",
   description:
     "Plataforma comunitaria para apoyar metas gestionadas por organizaciones aliadas con pagos instantáneos vía CoDi.",
