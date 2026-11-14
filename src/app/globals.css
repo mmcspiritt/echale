@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #fcfcfd;
+  --foreground: #0f172a;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-poppins), system-ui, sans-serif;
+}
+
+* {
+  border-color: rgb(228 228 231);
+}
+
+::selection {
+  background: #ffd2ea;
+  color: #7f0453;
+}
+
+.text-balance {
+  text-wrap: balance;
+}

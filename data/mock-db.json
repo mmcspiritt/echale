@@ -1,0 +1,216 @@
+{
+  "stories": [
+    {
+      "id": "story-miriam",
+      "slug": "miriam",
+      "personName": "Miriam Nava",
+      "title": "Miriam Nava reconstruye su casa tras el sismo",
+      "summary": "Después del sismo en Oaxaca, Miriam busca un techo seguro para su familia y volver a empezar con dignidad.",
+      "story": "Miriam Nava vive en una comunidad de Oaxaca donde el sismo dejó su casa severamente dañada. A pesar de la incertidumbre, no ha dejado de trabajar para cuidar a su familia. Esta meta busca reconstruir su vivienda por etapas: primero un techo seguro, luego muros firmes y finalmente terminar los espacios básicos para habitarla con tranquilidad.",
+      "location": "Oaxaca, México",
+      "category": "sismo",
+      "organizationName": "Fundación Techo Solidario A.C.",
+      "accountHolderName": "Miriam Nava",
+      "clabeMasked": "0121••••••••2429",
+      "peyKeyEnv": "PEY_API_KEY_MIRIAM",
+      "goalAmount": 50000,
+      "coverImage": "/images/lupita-oaxaca.jpg",
+      "galleryImages": [
+        "/images/lupita-oaxaca.jpg",
+        "/images/lupita-oaxaca.jpg",
+        "/images/lupita-oaxaca.jpg"
+      ],
+      "milestones": [
+        {
+          "id": "m1-miriam",
+          "label": "Techo de lámina",
+          "targetAmount": 10000
+        },
+        {
+          "id": "m2-miriam",
+          "label": "Muros reforzados",
+          "targetAmount": 25000
+        },
+        {
+          "id": "m3-miriam",
+          "label": "Piso y puerta",
+          "targetAmount": 40000
+        },
+        {
+          "id": "m4-miriam",
+          "label": "Cocina básica",
+          "targetAmount": 50000
+        }
+      ],
+      "isExample": true,
+      "createdAt": "2026-11-14T18:15:31.736Z",
+      "updatedAt": "2026-11-14T18:15:31.736Z"
+    },
+    {
+      "id": "story-santiago",
+      "slug": "santiago",
+      "personName": "Santiago Tena",
+      "title": "Procedimiento de rodilla para Santiago Tena",
+      "summary": "Santiago necesita recuperar movilidad para volver a trabajar y seguir apoyando a su familia.",
+      "story": "Santiago Tena es un joven deportista que sufrió una lesión de rodilla y hoy necesita un procedimiento médico para recuperar su movilidad. Sin el tratamiento no puede regresar a su trabajo estable. Esta meta cubre estudios, procedimiento y rehabilitación para que vuelva a caminar sin dolor.",
+      "location": "Puebla, México",
+      "category": "salud",
+      "organizationName": "Comunidad Sana A.B.P.",
+      "accountHolderName": "Santiago Tena",
+      "clabeMasked": "0121••••••••6252",
+      "peyKeyEnv": "PEY_API_KEY_SANTIAGO",
+      "goalAmount": 50000,
+      "coverImage": "/images/javier-hospital.jpg",
+      "galleryImages": [
+        "/images/javier-hospital.jpg",
+        "/images/javier-hospital.jpg",
+        "/images/javier-hospital.jpg"
+      ],
+      "milestones": [
+        {
+          "id": "m1-santiago",
+          "label": "Estudios preoperatorios",
+          "targetAmount": 12000
+        },
+        {
+          "id": "m2-santiago",
+          "label": "Procedimiento",
+          "targetAmount": 35000
+        },
+        {
+          "id": "m3-santiago",
+          "label": "Rehabilitación",
+          "targetAmount": 50000
+        }
+      ],
+      "isExample": true,
+      "createdAt": "2026-11-14T18:15:31.736Z",
+      "updatedAt": "2026-11-14T18:15:31.736Z"
+    },
+    {
+      "id": "story-adrian",
+      "slug": "adrian",
+      "personName": "Adrian Soto",
+      "title": "Adrian Soto vuelve a Guanajuato",
+      "summary": "Después de meses en CDMX, Adrian solo necesita su boleto y gastos básicos para regresar con su familia.",
+      "story": "Adrian Soto llegó a CDMX por trabajo temporal, pero una emergencia familiar en Guanajuato lo tomó sin ahorros. La organización aliada está gestionando su regreso seguro. Esta meta pequeña cubre transporte y alimentos para el trayecto.",
+      "location": "CDMX, México",
+      "category": "regresar-a-casa",
+      "organizationName": "Casa de Paso Esperanza I.A.P.",
+      "accountHolderName": "Adrian Soto",
+      "clabeMasked": "0141••••••••6217",
+      "peyKeyEnv": "PEY_API_KEY_ADRIAN",
+      "goalAmount": 900,
+      "coverImage": "/images/ramiro-terminal.jpg",
+      "galleryImages": [
+        "/images/ramiro-terminal.jpg",
+        "/images/ramiro-terminal.jpg"
+      ],
+      "milestones": [
+        {
+          "id": "m1-adrian",
+          "label": "Boleto de autobús",
+          "targetAmount": 650
+        },
+        {
+          "id": "m2-adrian",
+          "label": "Comida en trayecto",
+          "targetAmount": 900
+        }
+      ],
+      "isExample": true,
+      "createdAt": "2026-11-14T18:15:31.736Z",
+      "updatedAt": "2026-11-14T18:15:31.736Z"
+    }
+  ],
+  "payments": [
+    {
+      "id": "66325665-8a54-4848-a1cd-19107275e160",
+      "storyId": "story-miriam",
+      "reference": 1000001,
+      "peyApiKeyEnv": "PEY_API_KEY_MIRIAM",
+      "peyApiKeyId": null,
+      "providerChargeId": "seed-1000001",
+      "providerTransactionId": "txn-seed-1000001",
+      "amount": 10000,
+      "donorName": "Ana Martínez",
+      "message": "Cuenta conmigo, Miriam.",
+      "phone": null,
+      "concept": "Apoyo para Miriam Nava",
+      "method": "mock",
+      "status": "paid",
+      "qrString": "{}",
+      "paymentLink": null,
+      "paidAt": "2026-11-14T12:15:31.742Z",
+      "releasedAt": null,
+      "createdAt": "2026-11-14T18:15:31.743Z",
+      "updatedAt": "2026-11-14T18:15:31.745Z"
+    },
+    {
+      "id": "061024b9-415d-4e2e-8532-b58f34aa386d",
+      "storyId": "story-miriam",
+      "reference": 1000002,
+      "peyApiKeyEnv": "PEY_API_KEY_MIRIAM",
+      "peyApiKeyId": null,
+      "providerChargeId": "seed-1000002",
+      "providerTransactionId": "txn-seed-1000002",
+      "amount": 21000,
+      "donorName": "José y Fer",
+      "message": "Un abrazo grande para tu familia.",
+      "phone": null,
+      "concept": "Apoyo para Miriam Nava",
+      "method": "mock",
+      "status": "paid",
+      "qrString": "{}",
+      "paymentLink": null,
+      "paidAt": "2026-11-14T16:15:31.742Z",
+      "releasedAt": null,
+      "createdAt": "2026-11-14T18:15:31.745Z",
+      "updatedAt": "2026-11-14T18:15:31.746Z"
+    },
+    {
+      "id": "2ea94c2a-0322-4c43-85ce-d769904ee182",
+      "storyId": "story-santiago",
+      "reference": 1000003,
+      "peyApiKeyEnv": "PEY_API_KEY_SANTIAGO",
+      "peyApiKeyId": null,
+      "providerChargeId": "seed-1000003",
+      "providerTransactionId": "txn-seed-1000003",
+      "amount": 22500,
+      "donorName": "Equipo de barrio",
+      "message": "Échale ganas, estamos contigo.",
+      "phone": null,
+      "concept": "Apoyo para Santiago Tena",
+      "method": "mock",
+      "status": "paid",
+      "qrString": "{}",
+      "paymentLink": null,
+      "paidAt": "2026-11-14T17:35:31.742Z",
+      "releasedAt": null,
+      "createdAt": "2026-11-14T18:15:31.747Z",
+      "updatedAt": "2026-11-14T18:15:31.748Z"
+    },
+    {
+      "id": "bdd04945-28bb-485c-b286-62b5a4e46f61",
+      "storyId": "story-adrian",
+      "reference": 1000004,
+      "peyApiKeyEnv": "PEY_API_KEY_ADRIAN",
+      "peyApiKeyId": null,
+      "providerChargeId": "seed-1000004",
+      "providerTransactionId": "txn-seed-1000004",
+      "amount": 720,
+      "donorName": "Majo",
+      "message": "Buen viaje de regreso, Adrian.",
+      "phone": null,
+      "concept": "Apoyo para Adrian Soto",
+      "method": "mock",
+      "status": "paid",
+      "qrString": "{}",
+      "paymentLink": null,
+      "paidAt": "2026-11-14T17:55:31.742Z",
+      "releasedAt": null,
+      "createdAt": "2026-11-14T18:15:31.749Z",
+      "updatedAt": "2026-11-14T18:15:31.749Z"
+    }
+  ]
+}
