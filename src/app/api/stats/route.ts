@@ -56,7 +56,7 @@ export async function GET() {
   );
 
   const todayKey = mxDateKey(new Date());
-  const amountRaisedToday = paidPayments.reduce((acc, payment) => {
+  const amountRaisedTodayAll = paidPayments.reduce((acc, payment) => {
     const paidAt = payment.paidAt ? new Date(payment.paidAt) : null;
     if (!paidAt) return acc;
     return mxDateKey(paidAt) === todayKey ? acc + payment.amount : acc;
@@ -83,7 +83,7 @@ export async function GET() {
       amountRaised: roundMoney(totals.amountRaised),
       supporters: totals.supporters,
       stories: stories.length,
-      amountRaisedToday: roundMoney(amountRaisedToday),
+      amountRaisedTodayAll: roundMoney(amountRaisedTodayAll),
       amountRaisedTodayReal: roundMoney(amountRaisedTodayReal),
       amountRaisedPlatformTotal: roundMoney(totals.amountRaised),
     },

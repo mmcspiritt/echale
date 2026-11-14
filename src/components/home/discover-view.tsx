@@ -64,18 +64,21 @@ export function DiscoverView({ stories }: { stories: StoryWithStats[] }) {
               <div className="rounded-2xl border border-zinc-200 bg-white px-3 py-2">
                 <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">Recaudado</p>
                 <p className="text-base font-bold text-zinc-900">{formatCurrency(globalTotals.amount)}</p>
+                <p className="text-[11px] text-zinc-400">(incluye ejemplos)</p>
               </div>
               <div className="rounded-2xl border border-zinc-200 bg-white px-3 py-2">
                 <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">
                   {globalTotals.people === 1 ? "Donante" : "Donantes"}
                 </p>
                 <p className="text-base font-bold text-zinc-900">{globalTotals.people}</p>
+                <p className="text-[11px] text-zinc-400">(incluye ejemplos)</p>
               </div>
               <div className="rounded-2xl border border-zinc-200 bg-white px-3 py-2">
                 <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">
                   {stories.length === 1 ? "Historia" : "Historias"}
                 </p>
                 <p className="text-base font-bold text-zinc-900">{stories.length}</p>
+                <p className="text-[11px] text-zinc-400">(incluye ejemplos)</p>
               </div>
             </div>
           </div>

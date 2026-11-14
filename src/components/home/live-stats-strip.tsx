@@ -11,7 +11,7 @@ interface StatsResponse {
     amountRaised: number;
     supporters: number;
     stories: number;
-    amountRaisedToday: number;
+    amountRaisedTodayAll: number;
   };
   recentPayments: Array<{
     id: string;
@@ -83,7 +83,7 @@ export function LiveStatsStrip({
         amountRaised: initialAmountRaised,
         supporters: initialSupporters,
         stories: 0,
-        amountRaisedToday: 0,
+        amountRaisedTodayAll: 0,
       },
       recentPayments: [],
     },
@@ -100,20 +100,23 @@ export function LiveStatsStrip({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">En vivo</p>
-          <h2 className="text-2xl font-black tracking-[-0.02em] text-zinc-900">
-            Actividad confirmada por CoDi vía Pey
-          </h2>
+          <h2 className="text-2xl font-black tracking-[-0.02em] text-zinc-900">Actividad en vivo</h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            Los pagos reales llevan el sello Confirmado por CoDi
+          </p>
         </div>
         <div className="grid gap-2 text-sm sm:grid-cols-2">
           <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2">
             <p className="text-zinc-500">Total recaudado</p>
             <p className="text-lg font-bold text-zinc-900">{formatCurrency(animatedAmount)}</p>
+            <p className="text-xs text-zinc-400">(incluye ejemplos)</p>
           </div>
           <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2">
             <p className="text-zinc-500">
               {Math.round(animatedSupporters) === 1 ? "Persona que ayudó" : "Personas que ayudaron"}
             </p>
             <p className="text-lg font-bold text-zinc-900">{Math.round(animatedSupporters)}</p>
+            <p className="text-xs text-zinc-400">(incluye ejemplos)</p>
           </div>
         </div>
       </div>

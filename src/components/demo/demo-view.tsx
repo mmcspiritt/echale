@@ -13,7 +13,7 @@ interface StatsResponse {
     amountRaised: number;
     supporters: number;
     stories: number;
-    amountRaisedToday: number;
+    amountRaisedTodayAll: number;
     amountRaisedTodayReal?: number;
     amountRaisedPlatformTotal?: number;
   };
